@@ -1,4 +1,3 @@
-
 public abstract class BooleanExpression : Expression
 {
     public BooleanExpression(CodeLocation location) : base(location) { }

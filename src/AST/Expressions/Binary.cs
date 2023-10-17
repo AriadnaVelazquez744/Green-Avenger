@@ -1,4 +1,3 @@
-
 public abstract class BinaryExpression : Expression
 {
     public BinaryExpression(CodeLocation location) : base(location) { }

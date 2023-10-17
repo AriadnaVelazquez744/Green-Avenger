@@ -1,15 +1,11 @@
 public class Scope
 {
+    //Son los elementos que pertenecen a una vecindad del código y no al código completo, en este caso solo existen en mi lenguaje variables locales
     public Scope? Parent { get; set; }
     public List<string> Variables { get; set; }
-    public List<string> Functions { get; set; }
-    public List<string> ElementalFunctions { get; set; }
-
     public Scope()
     {
-        Functions = new List<string>();
-        Variables = new List<string>();
-        ElementalFunctions = new List<string>();
+        Variables = new();
     }
 
     public Scope CreateChild()

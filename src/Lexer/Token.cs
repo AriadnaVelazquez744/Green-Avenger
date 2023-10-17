@@ -1,5 +1,9 @@
 public class Token
 {
+    //Se declaran las propiedades que van a poseer los Token y son necesarias para su posterior uso
+    //En este caso cada token tendrá un valor que es la parte del texto que se a separado, un tipo de 
+    //acuerdo a cual podría ser su funcionalidad en la línea de código y la posición que ocupa dentro 
+    //de la línea de entrada.
     public string Value { get; private set; }
     public TokenType Type { get; private set; }
     public CodeLocation Location { get; private set; }
@@ -17,6 +21,8 @@ public class Token
     }
 }
 
+//Establece los parámetros que se tomaran en cuenta para determinar la posición del toquen, esta deberá 
+//variar en dependencia de la forma en que se establezca la entrada del string a analizar.
 public struct CodeLocation
 {
     public string File;
@@ -26,6 +32,8 @@ public struct CodeLocation
 
 public enum TokenType
 {
+    //Se declaran los tipos de token que utilizará el lenguaje y que corresponden con los tipos de operaciones 
+    //que se pueden hacer de una manera muy general.
     Number,
     Text,
     KeyWord,
@@ -41,6 +49,8 @@ public enum TokenType
 
 public class TokenValues
 {
+    //Aquí se especifican los valores que pueden tomar los token en mi vocabulario, para mi comodidad los separé en 
+    //en el tipo de token al que pertenecen y les comenté cual es el string que les corresponde.
     protected TokenValues() { }
 
     //TokenType.ArithmeticOperator
@@ -67,7 +77,6 @@ public class TokenValues
     public const string exp = "exp"; // euler pow to a value
     public const string log = "log"; // log
     public const string rand = "rand"; // random number between [0, 1]
-    public const string print = "print"; // print
 
     //TokenType.Constant
     public const string PI = "PI"; // pi
@@ -96,4 +105,5 @@ public class TokenValues
     public const string let = "let"; // let
     public const string In = "in"; // in
     public const string function = "function"; //function
+    public const string print = "print"; // print
 }

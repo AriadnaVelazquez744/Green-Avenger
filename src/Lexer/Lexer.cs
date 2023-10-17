@@ -1,9 +1,10 @@
-
 public static class Lexer
 {
-    private static LexicalAnalyzer? _LexicalProcess;
-    public static LexicalAnalyzer LexicalAnalyzer
+    private static LexicalAnalyzer? _LexicalProcess;    //Declara una instancia de la clase LexicalAnalyzer que me permite acceder a sus propiedades (en este cso lo que me interesa es modificar sus diccionarios y establecer el vocabulario)
+    public static LexicalAnalyzer LexicalAnalyzer 
     {
+        //Hace las modificaciones en la class LA antes de devolver el valor definido
+        //Se añaden como keys a los dict los string que representan en el vocabulario y como value los string del nombre relacionado al TokenValue que representan
         get
         {
             if (_LexicalProcess == null)
@@ -43,7 +44,6 @@ public static class Lexer
                 _LexicalProcess.KeyWords["exp"] = TokenValues.exp;
                 _LexicalProcess.KeyWords["log"] = TokenValues.log;
                 _LexicalProcess.KeyWords["rand"] = TokenValues.rand;
-                _LexicalProcess.KeyWords["print"] = TokenValues.print;
 
                 _LexicalProcess.KeyWords["PI"] = TokenValues.PI;
                 _LexicalProcess.KeyWords["E"] = TokenValues.E;
@@ -57,6 +57,7 @@ public static class Lexer
                 _LexicalProcess.KeyWords["let"] = TokenValues.let;
                 _LexicalProcess.KeyWords["in"] = TokenValues.In;
                 _LexicalProcess.KeyWords["function"] = TokenValues.function;
+                _LexicalProcess.KeyWords["print"] = TokenValues.print;
 
 
                 _LexicalProcess.Texts["\""] = "\"";
