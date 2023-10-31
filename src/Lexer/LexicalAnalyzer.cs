@@ -30,8 +30,14 @@ public class LexicalAnalyzer
             {
                 //Se lee el string que cumple con los requisitos para ser identificador.
                 //Se comprueba si es una palabra clave y se añade como tal o se añade como identificador en la lista de tokens
+                //En caso de ser una palabra clave se realiza la diferenciación en que tipo de palabra clave es
                 if (KeyWords.ContainsKey(value))
-                    tokens.Add(new Token(TokenType.KeyWord, KeyWords[value], stream.Location));
+                {
+                    if (value == "true" || value == "false")
+                        tokens.Add(new Token(TokenType.BooleanExpression, KeyWords[value], stream.Location));
+                    else
+                        tokens.Add(new Token(TokenType.KeyWord, KeyWords[value], stream.Location));
+                }
 
                 else
                     tokens.Add(new Token(TokenType.Identifier, value, stream.Location));

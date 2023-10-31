@@ -4,8 +4,7 @@ public class ElementalFunction
     public Dictionary<string, Func<double, double>> MathFunction { get; }
     public Dictionary<string, Func<double>> Constants { get; }
     public Dictionary<string, Func<double, double, double>> Log { get; }
-    public Dictionary<string, Func<object, object>> Print { get; }
-
+    
     public ElementalFunction()
     {
         MathFunction = new()
@@ -28,17 +27,7 @@ public class ElementalFunction
             { "log", (double arg1, double arg2) => Math.Log(arg1, arg2) }
         };
 
-        Print = new()
-        {
-            { "print", PrintReturn }
-        };
-
-        object PrintReturn(object argument)
-        {
-            Console.WriteLine(argument.ToString());
-            return argument;
-        }
-        double Rand()
+        static double Rand()
         {
             Random random = new();
             double randomNumber = random.NextDouble();

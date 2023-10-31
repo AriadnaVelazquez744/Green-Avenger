@@ -1,4 +1,3 @@
-
 public class Print : ASTNode
 {
     public Expression? Expression { get; set; }
@@ -9,7 +8,6 @@ public class Print : ASTNode
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
-        throw new NotImplementedException();
+        return Expression!.CheckSemantic(context, scope, errors);
     }
-
 }
