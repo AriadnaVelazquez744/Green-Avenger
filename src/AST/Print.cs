@@ -10,4 +10,10 @@ public class Print : ASTNode
     {
         return Expression!.CheckSemantic(context, scope, errors);
     }
+
+    public override void Evaluate()
+    {
+        if (Expression is not null)
+            Console.WriteLine(Expression.ToString());
+    }
 }

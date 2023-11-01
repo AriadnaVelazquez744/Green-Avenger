@@ -6,5 +6,5 @@ public abstract class Expression : ASTNode
 
     public abstract object? Value { get; set; }
 
-    public abstract void Evaluate();
+    public override void Evaluate() { }
 }

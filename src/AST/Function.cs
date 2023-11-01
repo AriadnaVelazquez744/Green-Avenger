@@ -12,19 +12,20 @@ public class FunctionDeclare : ASTNode
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
-        bool result = true;
-        
-
         foreach (var item in Statement)
         {
             if (!item.CheckSemantic(context, scope, errors))
             {
-                result = false;
-                break;
+                return false;
             }
         }
         
-        return result;
+        return true;
+    }
+
+    public override void Evaluate()
+    {
+        throw new NotImplementedException();
     }
 }
 
@@ -47,5 +48,10 @@ public class FunctionCall : ASTNode
         }
 
         return true;
+    }
+
+    public override void Evaluate()
+    {
+        throw new NotImplementedException();
     }
 }
