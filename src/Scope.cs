@@ -5,16 +5,17 @@ public class Scope
     //public Scope? Parent { get; set; }
     
     public Dictionary<string, object> Variables { get; set; }
+    public Dictionary<string, object> FuncVars { get; set; }
     public Scope()
     {
         Variables = new();
+        FuncVars = new();
     }
 
     public bool ContainsVariable(string name)
     {
         return Variables.ContainsKey(name);
     }
-
     public void AddVariable(string name, object value)
     {
         Variables.Add(name, value);
@@ -25,6 +26,15 @@ public class Scope
         {
             Variables.Remove(item.Key);
         }
+    }
+
+    public void AddFuncVar(string name, object value)
+    {
+        FuncVars.Add(name, value);
+    }
+    public void CleanFuncVars()
+    {
+        FuncVars.Clear();
     }
 
     // public Scope CreateChild()

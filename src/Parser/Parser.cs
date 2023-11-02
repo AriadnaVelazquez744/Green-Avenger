@@ -61,14 +61,15 @@ public class Parser
             }
 
             //En caso de encontrar un identificador hay dos opciones:
-            //Si este se encuentra seguido de un paréntesis o un numero o texto que serían argumentos, se refiere al llamado de una función y se parsea como tal.
-            //El otro caso es cuando no llama una función y por lo tanto se refiere a una variable, si esta variable es llamada desde aquí quiere decir que no pertenece a ningún scope y por tanto no tiene valor por lo que es un error sintáctico,
-            //sin embargo se realiza el parseo de expresiones para poder descartar la expression que es invalida completamente.
+            //Si este se encuentra seguido de un paréntesis o un numero o texto que serían argumentos, se refiere al llamado de una función y se parsea como tal, lo que incluye pasarle el token de 
+            //identificación para tener el nombre de la función que llama.
+            //El otro caso es cuando no llama una función y por lo tanto se refiere a una variable, si esta variable es llamada desde aquí quiere decir que no pertenece a ningún scope y por tanto 
+            //no tiene valor por lo que es un error sintáctico, sin embargo se realiza el parseo de expresiones para poder descartar la expression que es invalida completamente.
             else if (currentToken.Type == TokenType.Identifier)
             {
                 if (Stream.Next(TokenValues.OpenBracket) || Stream.Next(TokenType.Number) || Stream.Next(TokenType.Text))
                 {
-                    FunctionCall call = ParseFunctionInvocation(errors, currentToken.Value.ToString());
+                    FunctionCall call = ParseFunctionInvocation(errors, currentToken);
                     if (call is null)
                         errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, String.Format("Wrong invocation of the function {0}", currentToken.Value.ToString())));
                     else
@@ -153,6 +154,12 @@ public class Parser
     {
         List<ASTNode> body = new();
 
+        //Este procedimiento es muy similar al Parse inicial, la diferencia radica en que este ciclo se detiene al aparecer un paréntesis cerrado para detener el cuerpo de la función declarada o 
+        //el ; para delimitar el cuerpo de la variable (la vecindad del código en que las variables son válidas).
+        //También al no ser posible declarar funciones dentro de ninguna de las otras estructuras si se encuentra la palabra clave function se parsea normalmente la declaración de la función pero 
+        //no se incluye en la lista de ASTNode.
+        //Además, en el caso de la utilización de variables aquí sí se guarda en la lista el valor obtenido con el parseo de expresión si es que la variable existe en este scope.
+
         while(!Stream.Next(TokenValues.ClosedBracket) || !Stream.Next(TokenValues.StatementSeparator))
         {
             Token currentToken = Stream.LookAhead(1);
@@ -169,10 +176,8 @@ public class Parser
             else if (currentToken.Value.ToString() == "function")
             {
                 FunctionDeclare element = ParseFunctionDeclaration(errors);
-                if (element is null)
-                    errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, String.Format("Wrong declaration of the function {0}", Stream.LookAhead().Value.ToString())));
-                else
-                    body.Add(element!);
+                
+                errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Is not possible declare a new function here"));
             }
 
             else if (currentToken.Value.ToString() == "let")
@@ -197,7 +202,7 @@ public class Parser
             {
                 if (Stream.Next(TokenValues.OpenBracket) || Stream.Next(TokenType.Number) || Stream.Next(TokenType.Text))
                 {
-                    FunctionCall call = ParseFunctionInvocation(errors, currentToken.Value.ToString());
+                    FunctionCall call = ParseFunctionInvocation(errors, currentToken);
                     if (call is null)
                         errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, String.Format("Wrong invocation of the function {0}", currentToken.Value.ToString())));
                     else
@@ -223,26 +228,26 @@ public class Parser
                     body.Add(impression!);
             }
 
-            else if (currentToken.Type == TokenType.Text)
-            {
-                Expression literal;
-                if (Stream.Next(TokenValues.Concat))
-                {
-                    literal = ParseConcat(errors, currentToken)!;
-                    if (literal is null)
-                        errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Wrong concat declaration"));
-                    else
-                        body.Add(literal!);
-                }
-                else 
-                {
-                    literal = ParseBooleanExpression()!;
-                    if (literal is null)
-                        errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Wrong implementation of a text"));
-                    else
-                        body.Add(literal!);
-                }
-            }
+            // else if (currentToken.Type == TokenType.Text)
+            // {
+            //     Expression literal;
+            //     if (Stream.Next(TokenValues.Concat))
+            //     {
+            //         literal = ParseConcat(errors, currentToken)!;
+            //         if (literal is null)
+            //             errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Wrong concat declaration"));
+            //         else
+            //             body.Add(literal!);
+            //     }
+            //     else 
+            //     {
+            //         literal = ParseBooleanExpression()!;
+            //         if (literal is null)
+            //             errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Wrong implementation of a text"));
+            //         else
+            //             body.Add(literal!);
+            //     }
+            // }
 
             else if (currentToken.Value.ToString() == "!")
             {
@@ -269,15 +274,17 @@ public class Parser
     
     private Number ParseElementalFunction(List<CompilingError> errors, Token Id)
     {
+        //Se crea una nueva variable del tipo ElementalFunction y se comienzan a tomar los valores necesarios: se comprueba si el id es una contante ya que estas no llevan parámetros, de no 
+        //pertenecer a ese diccionario se pasa a mediante un bucle tomar todos los valores pasados como argumentos y que tienen que estar separados por comas, luego dependiendo de la cantidad 
+        //de argumentos que tiene es el tipo de función que puede ser y si no coincide devuelve un valor nulo; en caso de coincidir en alguno de los casos devuelve directamente un nodo tipo
+        //numero con el valor de calculado y la posición dada por el token con el id.
+
         ElementalFunction func = new();
 
         string id = Id.Value.ToString();
 
-        foreach (var item in func.Constants)
-        {
-            if (item.Key == id)
-                return new Number(func.Constants[id](), Id.Location);
-        }
+        if (func.Constants.ContainsKey(id))
+            return new Number(func.Constants[id](), Id.Location);
 
         if (!Stream.CanLookAhead(0)) return null!;
 
@@ -305,11 +312,11 @@ public class Parser
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
         }
 
-        if (arguments.Count == 1)
+        if (arguments.Count == 1 && func.MathFunction.ContainsKey(id))
         {
             return new Number(func.MathFunction[id](arguments[0]), Id.Location);
         }
-        else if (arguments.Count == 2)
+        else if (arguments.Count == 2 && func.Log.ContainsKey(id))
         {
             return new Number(func.Log[id](arguments[0], arguments[1]), Stream.LookAhead().Location);
         }
@@ -319,6 +326,8 @@ public class Parser
 
     private FunctionDeclare ParseFunctionDeclaration(List<CompilingError> errors)
     {
+        //Se busca el nombre dado a la nueva función, se extrae como token primero para poder utilizar su ubicación y luego se le separa el string identificativo. 
+        //Luego se comienza a leer de acuerdo a la sintaxis de la declaración de funciones del hulk
         if (!Stream.Next(TokenType.Identifier))
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "function name expected"));
@@ -330,22 +339,19 @@ public class Parser
         if (!Stream.Next(TokenValues.OpenBracket))
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "( expected"));
-            return null!;
         }
 
+        //Se inicializa una lista que contendrá todos los argumentos y que luego se pasará al nodo creado y que será devuelto
         List<string> arguments = new();
-        int n = 0;
         if (!Stream.Next(TokenValues.ClosedBracket))
         {
             do
             {
-                n++;
                 if (!Stream.Next(TokenType.Identifier))
-                {
                     errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "argument expected"));
-                    return null!;
-                }
-                arguments.Add(Stream.LookAhead().Value.ToString());
+                
+                else
+                    arguments.Add(Stream.LookAhead().Value.ToString());
 
             } while (Stream.Next(TokenValues.ValueSeparator));
             
@@ -359,15 +365,14 @@ public class Parser
         if (!Stream.Next(TokenValues.LambdaExpression))
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "=> expected"));
-            return null!;
         }
 
         if (!Stream.Next(TokenValues.OpenBracket))
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "( expected"));
-            return null!;
         }
 
+        //Se crea el cuerpo de la función como una lista de nodos para poder evaluarlos más adelante, si no existe cuerpo no hay función
         List<ASTNode> body = ParseBody(errors);
         if (body == null)
         {
@@ -375,6 +380,7 @@ public class Parser
             return null!;
         }
 
+        //Si no se le declaró un identificador para declararla o ese id ya fue utilizado para nombrar otra función, entonces no se devuelve nada
         if (id is null)
             return null!;
 
@@ -383,64 +389,74 @@ public class Parser
             errors.Add(new CompilingError(id.Location, ErrorCode.Invalid, String.Format("The function {0} already exist", functionName)));
             return null!;
         }
-        if (Scope.ContainsVariable(functionName))
-        {
-            errors.Add(new CompilingError(id.Location, ErrorCode.Invalid, "Already exist a variable with the same name"));
-            return null!;
-        }
         
-        Context.AddFunc(functionName, n);
+        Context.AddFunc(functionName, arguments.Count);
 
         return new FunctionDeclare(functionName, arguments, body, id.Location);
     }
 
-    private FunctionCall ParseFunctionInvocation(List<CompilingError> errors, string functionName)
+    private FunctionCall ParseFunctionInvocation(List<CompilingError> errors, Token id)
     {
+        //Se crea una lista de argumentos que deberán coincidir en cantidad con la función a la que invocan. Luego de determina si el numero de argumentos 
+        //necesarios es distinto de 0 y si lo es en un bucle se van determinando cada una, en caso de que una vez terminado este procedimiento el count sea 
+        //distinto de cero se devuelve nulo porque fue mal declarada la función.
+
         List<Expression> argumentValues = new();
+        string functionName = id.Value.ToString();
         int count = Context.GetArgNumber(functionName);
 
         if (!Stream.Next(TokenValues.OpenBracket))
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "( expected"));
-            return null!;
         }
 
         if (count != 0)
         {
             while (true)
             {
-                count--;
                 Expression argValue = ParseExpression()!;
-                if (argValue == null) 
-                    return null!;
-
-                argumentValues.Add(argValue);
+                if (argValue is not null) 
+                {
+                    count--;
+                    argumentValues.Add(argValue);
+                }
 
                 if (!Stream.Next(TokenValues.ValueSeparator))
                     break;    
             }
-            if (count != 0 || count < 0)
+
+            if (count != 0)
             {
+                if (!Stream.Next(TokenValues.ClosedBracket))
+                    errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
+                
                 errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Invalid, "Wrong number of arguments"));
                 return null!;
             }
         }
+        
+        if (!Stream.Next(TokenValues.ClosedBracket))
+        {
+            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
+        }
 
-        return new FunctionCall(functionName, argumentValues, Stream.LookAhead().Location);
+        return new FunctionCall(functionName, argumentValues, id.Location);
     }
 
     private Variable ParseVariable(List<CompilingError> errors) 
     {
         //Se inicializa el primer token de la expression para poder obtener de él la posición que necesita el ASTNode devuelto
         //así como el diccionario de variables que se están creando en este scope
+        
         Token forLocation = Stream.LookAhead();
         Dictionary<string, Expression> variables = new();
+        
         do
         {
             //El while va a seguir funcionando siempre que sea posible crear otra variable que pertenezca al mismo scope que en este caso sería si lo siguiente al valor es una coma
             //Se va revisando si el siguiente token cumple con la sintaxis de la declaración de variables y una vez se llega al final de la posible declaración y ninguno de los valores sea nulo
-            //se añade la variable al diccionario que formara parte del tipo Variable y se incluirá en el scope para poder comprobar más adelante en caso de tener in si ha sido declarada y se puede utilizar
-            //para añadirla ahora la scope su valor no es relevante por lo que pasa como null para evitar incoherencias en cuanto a si es object o Expression
+            //se añade la variable al diccionario que formara parte del tipo Variable y se incluirá en el scope para poder comprobar más adelante en caso de tener in si ha sido declarada y 
+            //se puede utilizar para añadirla ahora la scope su valor no es relevante por lo que pasa como null para evitar incoherencias en cuanto a si es object o Expression
             string variableName = null!;
             if (Stream.LookAhead().Value.ToString() == "let")
 
@@ -484,7 +500,8 @@ public class Parser
         } while (Stream.Next(TokenValues.StatementSeparator));
         
 
-        //Si aparece el token in quiere decir que lo que se encuentre a continuación pertenece al área en la que se utilizan las variables declaradas y se parsea lo que he denominado cuerpo de la variable que también es un lista de ASTNode
+        //Si aparece el token in quiere decir que lo que se encuentre a continuación pertenece al área en la que se utilizan las variables declaradas y se parsea lo que he denominado cuerpo de la 
+        //variable que también es un lista de ASTNode.
         if (!Stream.Next(TokenValues.In))
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.None, "The variables will not be use in anything"));
@@ -506,38 +523,39 @@ public class Parser
 
     private Conditional ParseConditional(List<CompilingError> errors)
     {
-        if (!Stream.Next(TokenValues.OpenBracket))
-        {
-            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
-            return null!;
-        }
+        //Se lee token a token teniendo en cuenta la formula sintácticamente correcta de las condicionales.
 
+        if (!Stream.Next(TokenValues.OpenBracket))
+            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
+
+
+        //La condicionales se parsea como expression para en la evaluación poder obtener un literal booleano. 
         BooleanExpression condition = ParseBooleanExpression()!;
         if (condition is null)
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "condition value expected"));
         }
 
-        if (!Stream.Next(TokenValues.ClosedBracket) || !Stream.Next(TokenValues.LambdaExpression))
-        {
-            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") => expected"));
-            return null!;
-        }
+
+        if (!Stream.Next(TokenValues.ClosedBracket))
+            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
+
+        if (!Stream.Next(TokenValues.LambdaExpression))
+            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "=> expected"));
 
         if (!Stream.Next(TokenValues.OpenBracket))
-        {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
-        }
 
+
+        //Se inicializan los cuerpos de ambas partes, el if se analiza directamente pues siempre hay que intentar encontrarlo aunque sea vacío y luego en dependencia de si aparece la keyWord 
+        //else se busca el cuerpo de esta. 
         List<ASTNode> ifBody = ParseBody(errors);
         List<ASTNode> elseBody = null!;
 
         if (Stream.Next(TokenValues.Else))
         {
             if (!Stream.Next(TokenValues.OpenBracket))
-            {
                 errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "() expected"));
-            }
 
             elseBody = ParseBody(errors);
         }
@@ -550,40 +568,36 @@ public class Parser
 
     private Print ParsePrint(List<CompilingError> errors)
     {
+        //Se realiza la lectura de la sintaxis de la función predeterminada print, no tiene nada particular, unicamente se introduce en el tipo Print la expression y la posición de la expression.
         if (!Stream.Next(TokenValues.OpenBracket))
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "( expected"));
         }
 
         Expression exp = ParseExpression()!;
-        if (exp == null)
-        {
-            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "expression expected"));
-            return null!;
-        }
 
         if (!Stream.Next(TokenValues.ClosedBracket))
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
         }
 
-        return new Print(exp, Stream.LookAhead().Location);
+        return new Print(exp, exp.Location);
     }
 
-    private Expression? ParseConcat(List<CompilingError> errors, Token text)
-    {
-        string left = text.Value.ToString();
+    // private Expression? ParseConcat(List<CompilingError> errors, Token text)
+    // {
+    //     string left = text.Value.ToString();
 
-        Expression? Right = ParseText()!;
-        if (Right == null)
-        {
-            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "Expected text for the concat operation"));
-            return null;
-        }
-        string right = Right.Value!.ToString()!;
+    //     Expression? Right = ParseText()!;
+    //     if (Right == null)
+    //     {
+    //         errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "Expected text for the concat operation"));
+    //         return null;
+    //     }
+    //     string right = Right.Value!.ToString()!;
 
-        return new Text(left + right, text.Location);
-    }
+    //     return new Text(left + right, text.Location);
+    // }
 
     private Expression? ParseNumber()
     {

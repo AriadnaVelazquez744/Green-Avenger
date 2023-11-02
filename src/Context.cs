@@ -1,8 +1,10 @@
 public class Context
 {
-    //Elementos globales que es necesario revisar para evitar repeticiones o errores
+    //Se encuentran los elementos globales que es necesario revisar para evitar repeticiones o errores.
+    //Se añaden y llaman las funciones que se van declarando para poder utilizarlas cuando sea necesario una vez comprobado que son semánticamente correctas.
     public List<string> ElementalFunctions { get; set; }
     public Dictionary<string, int> Functions { get; set; }
+    public Dictionary<string, FunctionDeclare> FunctionDeclared { get; set; }
 
     public Context()
     {
@@ -11,6 +13,7 @@ public class Context
             "sin", "cos", "sqrt", "exp", "PI", "E", "log", "rand"
         };
         Functions = new();
+        FunctionDeclared = new();
     }
 
     public bool ContainsElemFunc(string name)
@@ -26,8 +29,16 @@ public class Context
     {
         Functions.Add(name, n);
     }
+    public void AddFuncExpression(FunctionDeclare newFunc)
+    {
+        FunctionDeclared.Add(newFunc.Id, newFunc);
+    }
     public int GetArgNumber(string name)
     {
         return Functions[name];
+    }
+    public FunctionDeclare GetFunction(string id)
+    {
+        return FunctionDeclared[id];
     }
 }
