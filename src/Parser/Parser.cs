@@ -1,6 +1,6 @@
 public class Parser
 {
-    //La clase contiene el TokenStream para obtener los Tokens a parsear e inicializa las clases Context y Scope para su utilización.
+    //La clase contiene el TokenStream para obtener los Tokens a analizar e inicializa las clases Context y Scope para su utilización.
     public TokenStream Stream { get; set; }
     public Context Context { get; set; }
     public Scope Scope { get; set; }
@@ -11,8 +11,7 @@ public class Parser
         this.Scope = new();
     }
 
-    //public List<ASTNode> Parse(List<CompilingError> errors)
-    public ElementalProgram Parse(List<CompilingError> errors) 
+    public MainProgram Parse(List<CompilingError> errors) 
     {
         //Se crea una lista de ASTNode que son los que se analizarán en la semántica, se inicia el enumerator en la primera posición se empieza a analizar cada token a partir de ahí
         List<ASTNode> nodes = new();
@@ -148,7 +147,6 @@ public class Parser
         if (!Stream.Next(TokenValues.StatementSeparator))
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "; expected")); 
 
-        //return nodes;
         Stream.MoveBack(1);
         return new(nodes, Stream.LookAhead().Location);
     }
@@ -395,7 +393,7 @@ public class Parser
         
         Context.AddFunc(functionName, arguments.Count);
 
-        return new FunctionDeclare(functionName, arguments, body, id.Location);
+        return new FunctionDeclare(functionName, arguments, body, Context, id.Location);
     }
 
     private FunctionCall ParseFunctionInvocation(List<CompilingError> errors, Token id)

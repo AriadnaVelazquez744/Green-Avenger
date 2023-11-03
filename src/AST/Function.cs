@@ -34,7 +34,6 @@ public class FunctionDeclare : ASTNode
         FunctionDeclare newFunc = new(Id, Arguments, Statement, Context, Location);
         Context.AddFuncExpression(newFunc);
     }
-    //No hay nada que evaluar, el objetivo d esta clase es crear el tipo para guardar la información.
 }
 
 

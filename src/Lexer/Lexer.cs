@@ -1,6 +1,6 @@
-public static class Lexer
+public static class Lexer   //Vocabulario.
 {
-    private static LexicalAnalyzer? _LexicalProcess;    //Declara una instancia de la clase LexicalAnalyzer que me permite acceder a sus propiedades (en este cso lo que me interesa es modificar sus diccionarios y establecer el vocabulario)
+    private static LexicalAnalyzer? _LexicalProcess;    //Declara una instancia de la clase LexicalAnalyzer que me permite acceder a sus propiedades (en este caso lo que me interesa es modificar sus diccionarios y establecer el vocabulario)
     public static LexicalAnalyzer LexicalAnalyzer 
     {
         //Hace las modificaciones en la class LA antes de devolver el valor definido

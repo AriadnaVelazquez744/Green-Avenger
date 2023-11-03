@@ -110,14 +110,12 @@ public class LexicalAnalyzer
 class TokenReader
 {
     //Su función es ir leyendo el código para determinar los tokens
-    //readonly string fileName;   //Se emplea en una forma específica de recibir el input y no es modificable
     readonly string code;   //Es el código a analizar y no es modificable pues es necesario que no haya posibilidad de cambiarlo para no perder información
     int pos;    //Hace referencia a la posición del char que se analiza
-    int line;   //Se refiere a la línea de código que se está recorriendo (en este caso no va a ser necesaria pero se incluye para futuras mejoras en el lenguaje)
+    int line;   //Se refiere a la línea de código que se está recorriendo (en este caso siempre es la primera pero se incluye para facilitar futuras mejoras)
     int lastLB;    //Ayuda a determinar la columna en la que se encuentra el object pues indica la posición anterior al inicio de la linea en la que se encuentra
     public TokenReader(string code)
     {
-        //this.fileName = fileName;
         this.code = code;
         this.pos = 0;
         this.line = 1;
@@ -135,7 +133,6 @@ class TokenReader
         {
             return new CodeLocation
             {
-                //File = fileName,
                 Line = line,
                 Column = pos - lastLB
             };

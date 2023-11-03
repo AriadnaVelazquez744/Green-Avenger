@@ -5,7 +5,7 @@ public class Variable : ASTNode
     public Dictionary<string, Expression> Variables { get; set; }
     public List<ASTNode> Range { get; set; }
     public Scope Scope { get; set; }
-    public Variable(Dictionary<string, Expression> variable, List<ASTNode> range,Scope scope, CodeLocation location) : base(location)
+    public Variable(Dictionary<string, Expression> variable, List<ASTNode> range, Scope scope, CodeLocation location) : base(location)
     {
         Variables = variable;
         Range = range;
@@ -14,21 +14,27 @@ public class Variable : ASTNode
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
-        //Para revisar la semántica se comprueba que todos los elementos que conforman su rango de utilización sean semánticamnete correctos.
-
+        //Para revisar la semántica se comprueba que todos los elementos que conforman su rango de utilización sean semánticamente correctos.
+        bool x = true;
         foreach (var item in Range)
         {
             if (!item.CheckSemantic(context, scope, errors))
-                return false;
+            {
+                x = false;
+            }
         }
-
-        return true;
+        
+        if (x is false)
+            errors.Add(new CompilingError(Location, ErrorCode.Invalid, "At least one of the action where the variables are use has a Semantic problem"));
+        
+        return x;
     }
 
     public override void Evaluate()
     {
         //Este diccionario contendrá las variables que se modifican dentro de un scope hijo para que se puedan devolver a su valor original una vez terminado.
         Dictionary<string, object> redefine = new();
+        
         //Para evaluar las variables lo primero es añadirlas al scope para poder llamar sus valores, y se evalúa la expresión que compone su valor antes de añadirla
         foreach (var item in Variables)
         {

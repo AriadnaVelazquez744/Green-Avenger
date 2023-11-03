@@ -25,7 +25,6 @@ public class Token
 //variar en dependencia de la forma en que se establezca la entrada del string a analizar.
 public struct CodeLocation
 {
-    //public string File;
     public int Line;
     public int Column;
 }
@@ -74,13 +73,13 @@ public class TokenValues
     public const string sqrt = "sqrt"; // sqrt
     public const string sin = "sin"; // sin
     public const string cos = "cos"; //cos
-    public const string exp = "exp"; // euler pow to a value
+    public const string exp = "exp"; // Euler pow to a value
     public const string log = "log"; // log
     public const string rand = "rand"; // random number between [0, 1]
 
     //TokenType.Constant
     public const string PI = "PI"; // pi
-    public const string E = "E"; //euler value
+    public const string E = "E"; //Euler value
 
     //TokenType.BooleanOperator
     public const string And = "And"; // &

@@ -2,7 +2,7 @@ using System.Collections;
 
 public class TokenStream : IEnumerable<Token>
 {
-    //Itera a través de un lista de Tokens y provee de varios métodos para mover la posición del iterador y chequear el siguiente token de la lista.
+    //Itera a través de un lista de Tokens y provee de varios métodos para mover la posición del iterador y chequear el siguiente token de la interface.
     List<Token> tokens;
     int position;
 
