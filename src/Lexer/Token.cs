@@ -25,7 +25,7 @@ public class Token
 //variar en dependencia de la forma en que se establezca la entrada del string a analizar.
 public struct CodeLocation
 {
-    public string File;
+    //public string File;
     public int Line;
     public int Column;
 }

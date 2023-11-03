@@ -14,11 +14,11 @@ public class LexicalAnalyzer
         Texts = new();
     }
 
-    public IEnumerable<Token> GetTokens(string fileName, string code, List<CompilingError> errors)
+    public IEnumerable<Token> GetTokens(string code, List<CompilingError> errors)
     {
         //La función de este método es crear una interface recorrible con los token que conforman el código a analizar (input)
         List<Token> tokens = new();    //Listado de token en que se divide el input y luego serán analizados
-        TokenReader stream = new(fileName, code);    //llamado a la clase stream para utilizar sus métodos en el recorrido del input
+        TokenReader stream = new(code);    //llamado a la clase stream para utilizar sus métodos en el recorrido del input
 
         while (!stream.EOF)
         {
@@ -110,14 +110,14 @@ public class LexicalAnalyzer
 class TokenReader
 {
     //Su función es ir leyendo el código para determinar los tokens
-    readonly string fileName;   //Se emplea en una forma específica de recibir el input y no es modificable
+    //readonly string fileName;   //Se emplea en una forma específica de recibir el input y no es modificable
     readonly string code;   //Es el código a analizar y no es modificable pues es necesario que no haya posibilidad de cambiarlo para no perder información
     int pos;    //Hace referencia a la posición del char que se analiza
     int line;   //Se refiere a la línea de código que se está recorriendo (en este caso no va a ser necesaria pero se incluye para futuras mejoras en el lenguaje)
     int lastLB;    //Ayuda a determinar la columna en la que se encuentra el object pues indica la posición anterior al inicio de la linea en la que se encuentra
-    public TokenReader(string fileName, string code)
+    public TokenReader(string code)
     {
-        this.fileName = fileName;
+        //this.fileName = fileName;
         this.code = code;
         this.pos = 0;
         this.line = 1;
@@ -135,7 +135,7 @@ class TokenReader
         {
             return new CodeLocation
             {
-                File = fileName,
+                //File = fileName,
                 Line = line,
                 Column = pos - lastLB
             };
