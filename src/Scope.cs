@@ -28,13 +28,13 @@ public class Scope
         }
     }
 
+    public bool ContainFuncVar(string id)
+    {
+        return FuncVars.ContainsKey(id);
+    }
     public void AddFuncVar(string name, object value)
     {
         FuncVars.Add(name, value);
-    }
-    public void CleanFuncVars()
-    {
-        FuncVars.Clear();
     }
 
     // public Scope CreateChild()

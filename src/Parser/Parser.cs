@@ -440,7 +440,7 @@ public class Parser
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
         }
 
-        return new FunctionCall(functionName, argumentValues, id.Location);
+        return new FunctionCall(functionName, argumentValues, Context, Scope, id.Location);
     }
 
     private Variable ParseVariable(List<CompilingError> errors) 
