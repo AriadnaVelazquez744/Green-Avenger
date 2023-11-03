@@ -11,7 +11,8 @@ public class Parser
         this.Scope = new();
     }
 
-    public List<ASTNode> Parse(List<CompilingError> errors)
+    //public List<ASTNode> Parse(List<CompilingError> errors)
+    public ElementalProgram Parse(List<CompilingError> errors) 
     {
         //Se crea una lista de ASTNode que son los que se analizarán en la semántica, se inicia el enumerator en la primera posición se empieza a analizar cada token a partir de ahí
         List<ASTNode> nodes = new();
@@ -147,7 +148,9 @@ public class Parser
         if (!Stream.Next(TokenValues.StatementSeparator))
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "; expected")); 
 
-        return nodes;
+        //return nodes;
+        Stream.MoveBack(1);
+        return new(nodes, Stream.LookAhead().Location);
     }
 
     private List<ASTNode> ParseBody(List<CompilingError> errors)
