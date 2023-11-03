@@ -2,6 +2,7 @@ public abstract class BooleanExpression : Expression
 {
     public BooleanExpression(CodeLocation location) : base(location) { }
 
+    //Las propiedades Left y Right hacen referencia a ambos lados del símbolo con el que se está
     public Expression? Left { get; set; }
     public Expression? Right { get; set; }
 
