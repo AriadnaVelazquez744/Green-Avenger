@@ -5,11 +5,13 @@ public class FunctionDeclare : ASTNode
     public string Id { get; set; }
     public List<string> Arguments { get; set; }
     public List<ASTNode> Statement { get; set; }
-    public FunctionDeclare(string id, List<string> arguments, List<ASTNode> statement, CodeLocation location) : base(location)
+    public Context Context { get; set; }
+    public FunctionDeclare(string id, List<string> arguments, List<ASTNode> statement, Context context, CodeLocation location) : base(location)
     {
         Id = id;
         Arguments = arguments;
         Statement = statement;
+        Context = context;
     }
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
@@ -27,7 +29,11 @@ public class FunctionDeclare : ASTNode
         return true;
     }
 
-    public override void Evaluate() { }
+    public override void Evaluate()
+    {
+        FunctionDeclare newFunc = new(Id, Arguments, Statement, Context, Location);
+        Context.AddFuncExpression(newFunc);
+    }
     //No hay nada que evaluar, el objetivo d esta clase es crear el tipo para guardar la información.
 }
 
