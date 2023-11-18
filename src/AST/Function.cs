@@ -17,23 +17,46 @@ public class FunctionDeclare : ASTNode
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
         //Para revisar que sea correcta semánticamente lo que hay que comprobar es que cada uno de sus nodos lo sean.
+        bool right = true;
 
         foreach (var item in Statement)
         {
-            if (!item.CheckSemantic(context, scope, errors))
+            if (item is Expression)
             {
-                return false;
+                if (!((Expression)item).CheckSemantic(context, scope, errors))
+                    right = false;
+            }
+            else if (item is Variable)
+            {
+                if (!((Variable)item).CheckSemantic(context, scope, errors))
+                    right = false;
+            }
+            else if (item is FunctionCall)
+            {
+                if (!((FunctionCall)item).CheckSemantic(context, scope, errors))
+                    right = false;
+            }
+            else if (item is Conditional)
+            {
+                if (!((Conditional)item).CheckSemantic(context, scope, errors))
+                    right = false;
+            }
+            else if (item is Print)
+            {
+                if (!((Print)item).CheckSemantic(context, scope, errors))
+                    right = false;
+            }
+            else if (item is FunctionDeclare)
+            {
+                if (!((FunctionDeclare)item).CheckSemantic(context, scope, errors))
+                    right = false;
             }
         }
         
-        return true;
+        return right;
     }
 
-    public override void Evaluate()
-    {
-        FunctionDeclare newFunc = new(Id, Arguments, Statement, Context, Location);
-        Context.AddFuncExpression(newFunc);
-    }
+    public override void Evaluate() { }
 }
 
 
@@ -105,21 +128,30 @@ public class FunctionCall : ASTNode
 
         //Se obtiene el cuerpo de la función y se evalúa cada uno de los nodos que la conforman.
         List<ASTNode> body = func.Statement;
-        if ((body.Count == 1) && (body[0] is Expression))
+        foreach (var item in body)
         {
-            foreach (var item in body)
+            if (item is Expression)
             {
-                Console.WriteLine(item.ToString());
+                ((Expression)item).Evaluate();
+                Console.WriteLine(((Expression)item).Value!.ToString());
+            }
+            else if (item is Variable)
+            {
+                ((Variable)item).Evaluate();
+            }
+            else if (item is FunctionCall)
+            {
+                ((FunctionCall)item).Evaluate();
+            }
+            else if (item is Conditional)
+            {
+                ((Conditional)item).Evaluate();
+            }
+            else if (item is Print)
+            {
+                ((Print)item).Evaluate();
             }
         }
-        else
-        {
-            foreach (var item in body)
-            {
-                item.Evaluate();
-            }
-        }
-
 
         //Al finalizar con la evaluación del cuerpo de la función se eliminan las variables que pertenecen a este llamado y si se tuvieron que redefinir 
         //algunas (como ocurriría en llamados recursivos) se vuelven a añadir con sus valores originales.

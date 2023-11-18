@@ -20,17 +20,17 @@ public class TokenStream : IEnumerable<Token>
     public void MoveBack(int k) => position -= k;
 
 
-    //Los métodos Next (y todas sus sobrecargas), CanLookAhead y LookAhead permiten comprobar el próximo token sin mover el iterador de lugar
+    //Los métodos Next (y todas sus sobrecargas), CanLookAhead y LookAhead permiten comprobar el próximo token, los Next cambian a la siguiente posición y los otros no.
     public bool Next()
     {
-        //Comprueba si existe el proximo token
-        if (position < tokens.Count - 1) position++;
+        //Comprueba si existe el proximo token y se mueve a la siguiente posición
+        if (position < tokens.Count) position++;
         return position < tokens.Count;
     }
     public bool Next(TokenType type)
     {
         //Comprueba si el próximo token es de un tipo determinado
-        if (position < tokens.Count - 1 && LookAhead(1).Type == type)
+        if (position < tokens.Count && LookAhead(1).Type == type)
         {
             position++;
             return true;
@@ -40,7 +40,7 @@ public class TokenStream : IEnumerable<Token>
     public bool Next(string value)
     {
         //Comprueba si el valor del próximo token coincide con el del argumento
-        if (position < tokens.Count - 1 && LookAhead(1).Value == value)
+        if (position < tokens.Count && LookAhead(1).Value == value)
         {
             position++;
             return true;
@@ -56,7 +56,7 @@ public class TokenStream : IEnumerable<Token>
 
     public Token LookAhead(int k = 0)
     {
-        //Devuelve el token tantas posiciones adelante como se indique.
+        //Devuelve el token tantas posiciones adelante como se indique, si no se pone número recoge el elemento sobre el que se encuentra.
         return tokens[position + k];
     }
 

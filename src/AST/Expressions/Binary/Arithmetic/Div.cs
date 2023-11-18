@@ -1,4 +1,4 @@
-public class Div :BinaryExpression
+public class Div : BinaryExpression
 {
     public Div(CodeLocation location) : base(location) { }
 

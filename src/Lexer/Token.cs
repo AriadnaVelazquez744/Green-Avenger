@@ -38,12 +38,10 @@ public enum TokenType
     KeyWord,
     Identifier,
     Symbol,
-    ArithmeticOperator,
-    BooleanOperator,
+    Operator,
     BooleanExpression,
     Conditional,
     ElementalFunctions,
-    Constants,
 }
 
 public class TokenValues
@@ -52,22 +50,31 @@ public class TokenValues
     //en el tipo de token al que pertenecen y les comenté cual es el string que les corresponde.
     protected TokenValues() { }
 
-    //TokenType.ArithmeticOperator
-    public const string Add = "Addition"; // +
-    public const string Sub = "Subtract"; // -
-    public const string Mul = "Multiplication"; // *
-    public const string Div = "Division"; // /
-    public const string Pow = "Power"; // ^
+    //TokenType.Operator
+    public const string Add = "+"; // +
+    public const string Sub = "-"; // -
+    public const string Mul = "*"; // *
+    public const string Div = "/"; // /
+    public const string Pow = "^"; // ^
+    public const string And = "&"; // &
+    public const string Or = "|"; // |
+    public const string Not = "!"; // !
+    public const string Equal = "=="; // ==
+    public const string Different = "!="; // !=
+    public const string Less = "<"; // <
+    public const string LessOrEqual = "<="; // <=
+    public const string More = ">"; // >
+    public const string MoreOrEqual = ">="; // >=
+    public const string Concat = "@"; // @
 
     //TokenType.Symbol
-    public const string Assign = "Assign"; // =
-    public const string Reassign = "Reassign"; // :=
-    public const string ValueSeparator = "ValueSeparator"; // ,
-    public const string StatementSeparator = "StatementSeparator"; // ;
-    public const string OpenBracket = "OpenBracket"; // (
-    public const string ClosedBracket = "ClosedBracket"; // )
-    public const string LambdaExpression = "LambdaExpression"; // =>
-    public const string Concat = "Concat"; // @
+    public const string Assign = "="; // =
+    public const string Reassign = ":="; // :=
+    public const string ValueSeparator = ","; // ,
+    public const string StatementSeparator = ";"; // ;
+    public const string OpenBracket = "("; // (
+    public const string ClosedBracket = ")"; // )
+    public const string LambdaExpression = "=>"; // =>
     
     //TokenType.ElementalFunctions
     public const string sqrt = "sqrt"; // sqrt
@@ -76,25 +83,12 @@ public class TokenValues
     public const string exp = "exp"; // Euler pow to a value
     public const string log = "log"; // log
     public const string rand = "rand"; // random number between [0, 1]
-
-    //TokenType.Constant
     public const string PI = "PI"; // pi
     public const string E = "E"; //Euler value
-
-    //TokenType.BooleanOperator
-    public const string And = "And"; // &
-    public const string Or = "Or"; // |
-    public const string Not = "Not"; // !
-    public const string Equal = "Equal"; // ==
-    public const string Different = "Different"; // !=
-    public const string Less = "Less"; // <
-    public const string LessOrEqual = "LessOrEqual"; // <=
-    public const string More = "More"; // >
-    public const string MoreOrEqual = "MoreOrEqual"; // >=
-    
+        
     //TokenType.BooleanExpression
-    public const string True = "True"; // True
-    public const string False = "False"; // False
+    public const string True = "true"; // True
+    public const string False = "false"; // False
 
     //TokenType.Conditional
     public const string If = "if"; // if

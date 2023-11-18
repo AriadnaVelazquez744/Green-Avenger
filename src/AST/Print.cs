@@ -14,6 +14,9 @@ public class Print : ASTNode
     public override void Evaluate()
     {
         if (Expression is not null)
+        {
+            Expression.Evaluate();
             Console.WriteLine(Expression.Value!.ToString());
+        }
     }
 }

@@ -26,15 +26,31 @@ public class LexicalAnalyzer
             if (stream.ReadWhiteSpace())    //Si es un espacio en blanco se salta el char
                 continue;
 
-            if (stream.ReadId(out value))
+            else if (stream.ReadId(out value))
             {
                 //Se lee el string que cumple con los requisitos para ser identificador.
                 //Se comprueba si es una palabra clave y se añade como tal o se añade como identificador en la lista de tokens
                 //En caso de ser una palabra clave se realiza la diferenciación en que tipo de palabra clave es
+                if (char.IsDigit(value[0]))
+                {
+                    errors.Add(new CompilingError(stream.Location, ErrorCode.Invalid, "The identifiers and keywords can't start with digits"));
+                    continue;
+                }
+
                 if (KeyWords.ContainsKey(value))
                 {
                     if (value == "true" || value == "false")
+                    {
                         tokens.Add(new Token(TokenType.BooleanExpression, KeyWords[value], stream.Location));
+                    }
+                    else if (value == "if" || value == "else")
+                    {
+                        tokens.Add(new Token(TokenType.Conditional, KeyWords[value], stream.Location));
+                    }
+                    else if (value == "sqrt" || value == "sin" || value == "cos" || value == "exp" || value == "log" || value == "rand" || value == "PI" || value == "E")
+                    {
+                        tokens.Add(new Token(TokenType.ElementalFunctions, KeyWords[value], stream.Location));
+                    }
                     else
                         tokens.Add(new Token(TokenType.KeyWord, KeyWords[value], stream.Location));
                 }
@@ -45,7 +61,7 @@ public class LexicalAnalyzer
                 continue;
             }
 
-            if (stream.ReadNumber(out value))
+            else if (stream.ReadNumber(out value))
             {
                 //Si primer char es un número se entra en el cuerpo de la condicional y se comprueba si realmente es un numero al intentar 
                 //parsearlo, de no ser posible se determina como un error, de lo contrario se añade como token numérico.
@@ -58,15 +74,18 @@ public class LexicalAnalyzer
                 continue;
             }
 
-            if (MatchText(stream, tokens, errors))
+            else if (MatchText(stream, tokens, errors))
                 continue;
 
-            if (MatchSymbol(stream, tokens))
+            else if (MatchSymbol(stream, tokens))
                 continue;
 
             //si el char que se está leyendo con coincide con ninguna de las posibilidades es algo completamente desconocido de lo que ni siquiera se me ocurre un ejemplo y se declara como tal
-            var unkOp = stream.ReadAny();
-            errors.Add(new CompilingError(stream.Location, ErrorCode.Unknown, unkOp.ToString()));
+            else 
+            {
+                var unkOp = stream.ReadAny();
+                errors.Add(new CompilingError(stream.Location, ErrorCode.Unknown, unkOp.ToString()));
+            }
         }
 
         return tokens;
@@ -79,8 +98,16 @@ public class LexicalAnalyzer
         {
             if (stream.Match(op))
             {
-                tokens.Add(new Token(TokenType.Symbol, Operators[op], stream.Location));
-                return true;
+                if (op == "=" || op == "," || op == ";" || op == "(" || op == ")" || op == "=>")
+                {
+                    tokens.Add(new Token(TokenType.Symbol, Operators[op], stream.Location));
+                    return true;
+                }
+                else
+                {
+                    tokens.Add(new Token(TokenType.Operator, Operators[op], stream.Location));
+                    return true;
+                }
             }
         }
         return false;
@@ -149,7 +176,7 @@ class TokenReader
     }
 
     public bool Match(string prefix)
-    {
+    { 
         //Determina si el arg coincide con el fragmento de input que se está leyendo, se ser asi modifica el valor de pos según tamaño de arg.
         if (ContinuesWith(prefix))
         {
@@ -187,7 +214,9 @@ class TokenReader
         //si no ha aparecido un char que no sea un numero (después del primer punto no se puede añadir otro punto) se comienzan a añadir 
         //letras o numero que aparezcan ininterrumpidamente, si no aparece nada es que no está relacionado con el contexto de llamada y retorna false.
         number = "";
-
+        if (!EOL && Match("-"))
+            number += "-";
+            
         while (!EOL && char.IsDigit(Peek()))
             number += ReadAny();
         if (!EOL && Match("."))
@@ -223,7 +252,7 @@ class TokenReader
 
     public char ReadAny()
     {
-        //Devuelve un char si no se ha excedido los límites de la línea y salta de linea en caso de haya llegado all final de esta 
+        //Devuelve un char si no se ha excedido los límites de la línea y salta de linea en caso de haya llegado al final de esta 
         //pero no del input, devolviendo el char de la pos siguiente y no en la que se encuentra a diferencia de Peek()
         if (EOF)
             throw new InvalidOperationException();

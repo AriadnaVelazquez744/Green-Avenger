@@ -13,4 +13,13 @@ public class BoolLiteral : BooleanExpression
 
         Value = element;
     }
+
+    public override string ToString()
+    {
+        if (Value == null)
+        {
+            return String.Format("({0})", Left);
+        }
+        return Value.ToString()!;
+    }
 }

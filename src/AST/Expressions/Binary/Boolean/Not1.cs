@@ -1,10 +1,12 @@
 public class Not1 : Expression
 {
-    public Not1(CodeLocation location) : base(location) { }
-
     public override ExpressionType Type { get; set; }
     public override object? Value { get; set; }
     public Expression? Expression { get; set; }
+    public Not1(Expression expression, CodeLocation location) : base(location) 
+    { 
+        Expression = expression;
+    }
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
@@ -25,7 +27,7 @@ public class Not1 : Expression
     {
         Expression!.Evaluate();
         
-        bool exp = Convert.ToBoolean(Expression);
+        bool exp = Convert.ToBoolean(Expression.Value);
 
         Value = !exp;
     }

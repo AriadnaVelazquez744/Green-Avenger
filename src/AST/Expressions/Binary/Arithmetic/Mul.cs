@@ -1,4 +1,4 @@
-public class Mul :BinaryExpression
+public class Mul : BinaryExpression
 {
     public Mul(CodeLocation location) : base(location) { }
 
