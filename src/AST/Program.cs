@@ -19,35 +19,33 @@ public class MainProgram : ASTNode
         
         foreach (var item in Statements)
         {
-            if (item is Expression)
+            if (item is Expression expression)
             {
-                if (!((Expression)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = expression.CheckSemantic(context, scope, errors);
             }
-            else if (item is Variable)
+            else if (item is Variable variable)
             {
-                if (!((Variable)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = variable.CheckSemantic(context, scope, errors);
             }
-            else if (item is FunctionCall)
+            else if (item is FunctionCall call)
             {
-                if (!((FunctionCall)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = call.CheckSemantic(context, scope, errors);
             }
-            else if (item is Conditional)
+            else if (item is Conditional conditional)
             {
-                if (!((Conditional)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = conditional.CheckSemantic(context, scope, errors);
             }
-            else if (item is Print)
+            else if (item is Print print)
             {
-                if (!((Print)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = print.CheckSemantic(context, scope, errors);
             }
-            else if (item is FunctionDeclare)
+            else if (item is FunctionDeclare declare)
             {
-                if (!((FunctionDeclare)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = declare.CheckSemantic(context, scope, errors);
+            }
+            else if (item is ElementalFunction elem)
+            {
+                right = elem.CheckSemantic(context, scope, errors);
             }
         }
 
@@ -62,9 +60,9 @@ public class MainProgram : ASTNode
         //Se evalúan primero las declaraciones de funciones y se eliminan de la lista de nodos para no volver a tomarlas.
         foreach (ASTNode item in Statements)
         {
-            if (item is FunctionDeclare)
+            if (item is FunctionDeclare declare)
             {
-                Context.AddFuncExpression((FunctionDeclare)item);                
+                Context.AddFuncExpression(declare);                
                 Statements.Remove(item);
             }
         }
@@ -72,26 +70,31 @@ public class MainProgram : ASTNode
         //Luego se evalúan ordenadamente los nodos restantes
         foreach (ASTNode item in Statements)
         {
-            if (item is Expression)
+            if (item is Expression expression)
             {
-                ((Expression)item).Evaluate();
-                Console.WriteLine(((Expression)item).Value!.ToString());
+                expression.Evaluate();
+                Console.WriteLine(expression.Value!.ToString());
             }
-            else if (item is Variable)
+            else if (item is ElementalFunction elem)
             {
-                ((Variable)item).Evaluate();
+                elem.Evaluate();
+                Console.WriteLine(elem.Value!.ToString());
             }
-            else if (item is FunctionCall)
+            else if (item is Variable variable)
             {
-                ((FunctionCall)item).Evaluate();
+                variable.Evaluate();
             }
-            else if (item is Conditional)
+            else if (item is FunctionCall call)
             {
-                ((Conditional)item).Evaluate();
+                call.Evaluate();
             }
-            else if (item is Print)
+            else if (item is Conditional conditional)
             {
-                ((Print)item).Evaluate();
+                conditional.Evaluate();
+            }
+            else if (item is Print print)
+            {
+                print.Evaluate();
             }
         }
     }

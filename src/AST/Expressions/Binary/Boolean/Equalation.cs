@@ -4,7 +4,7 @@ public class Equality : BinaryExpression
 
     public override ExpressionType Type { get; set; }
     public override object? Value { get; set; }
-    public string Op { get; set; }
+    public string? Op { get; set; }
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {

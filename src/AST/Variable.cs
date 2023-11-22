@@ -16,11 +16,36 @@ public class Variable : ASTNode
     {
         //Para revisar la semántica se comprueba que todos los elementos que conforman su rango de utilización sean semánticamente correctos.
         bool x = true;
+
+        foreach (var name in Variables)
+        {
+            
+        }
         foreach (var item in Range)
         {
-            if (!item.CheckSemantic(context, scope, errors))
+            if (item is Expression expression)
             {
-                x = false;
+                x = expression.CheckSemantic(context, scope, errors);
+            }
+            else if (item is Variable variable)
+            {
+                x = variable.CheckSemantic(context, scope, errors);
+            }
+            else if (item is FunctionCall call)
+            {
+                x = call.CheckSemantic(context, scope, errors);
+            }
+            else if (item is Conditional conditional)
+            {
+                x = conditional.CheckSemantic(context, scope, errors);
+            }
+            else if (item is Print print)
+            {
+                x = print.CheckSemantic(context, scope, errors);
+            }
+            else if (item is ElementalFunction elem)
+            {
+                x = elem.CheckSemantic(context, scope, errors);
             }
         }
         
@@ -33,7 +58,7 @@ public class Variable : ASTNode
     public override void Evaluate()
     {
         //Este diccionario contendrá las variables que se modifican dentro de un scope hijo para que se puedan devolver a su valor original una vez terminado.
-        Dictionary<string, object> redefine = new();
+        Dictionary<string, Expression> redefine = new();
         
         //Para evaluar las variables lo primero es añadirlas al scope para poder llamar sus valores, y se evalúa la expresión que compone su valor antes de añadirla
         foreach (var item in Variables)
@@ -44,7 +69,7 @@ public class Variable : ASTNode
                 redefine.Add(item.Key, Scope.Variables[item.Key]);
                 Scope.Variables.Remove(item.Key);
             }
-            Scope.AddVariable(item.Key, item.Value.Value!);
+            Scope.AddVariable(item.Key, (Expression)item.Value.Value!);
         }
 
         //Lo siguiente es evaluar cada elemento que compone su rango de utilización, en caso de que no tenga rango los 
@@ -54,7 +79,32 @@ public class Variable : ASTNode
         {
             foreach (var item in Range)
             {
-                item.Evaluate();
+                if (item is Expression expression)
+            {
+                expression.Evaluate();
+                Console.WriteLine(expression.Value!.ToString());
+            }
+            else if (item is ElementalFunction elem)
+            {
+                elem.Evaluate();
+                Console.WriteLine(elem.Value!.ToString());
+            }
+            else if (item is Variable variable)
+            {
+                variable.Evaluate();
+            }
+            else if (item is FunctionCall call)
+            {
+                call.Evaluate();
+            }
+            else if (item is Conditional conditional)
+            {
+                conditional.Evaluate();
+            }
+            else if (item is Print print)
+            {
+                print.Evaluate();
+            }
             }
         }
         else

@@ -4,6 +4,7 @@ public enum ExpressionType
     AnyType,
     Text,
     Number,
+    Identifier,
     Boolean,
     ErrorType
 }

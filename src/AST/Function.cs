@@ -21,35 +21,33 @@ public class FunctionDeclare : ASTNode
 
         foreach (var item in Statement)
         {
-            if (item is Expression)
+            if (item is Expression expression)
             {
-                if (!((Expression)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = expression.CheckSemantic(context, scope, errors);
             }
-            else if (item is Variable)
+            else if (item is Variable variable)
             {
-                if (!((Variable)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = variable.CheckSemantic(context, scope, errors);
             }
-            else if (item is FunctionCall)
+            else if (item is FunctionCall call)
             {
-                if (!((FunctionCall)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = call.CheckSemantic(context, scope, errors);
             }
-            else if (item is Conditional)
+            else if (item is Conditional conditional)
             {
-                if (!((Conditional)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = conditional.CheckSemantic(context, scope, errors);
             }
-            else if (item is Print)
+            else if (item is Print print)
             {
-                if (!((Print)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = print.CheckSemantic(context, scope, errors);
             }
-            else if (item is FunctionDeclare)
+            else if (item is FunctionDeclare declare)
             {
-                if (!((FunctionDeclare)item).CheckSemantic(context, scope, errors))
-                    right = false;
+                right = declare.CheckSemantic(context, scope, errors);
+            }
+            else if (item is ElementalFunction elem)
+            {
+                right = elem.CheckSemantic(context, scope, errors);
             }
         }
         
@@ -130,26 +128,31 @@ public class FunctionCall : ASTNode
         List<ASTNode> body = func.Statement;
         foreach (var item in body)
         {
-            if (item is Expression)
+            if (item is Expression expression)
             {
-                ((Expression)item).Evaluate();
-                Console.WriteLine(((Expression)item).Value!.ToString());
+                expression.Evaluate();
+                Console.WriteLine(expression.Value!.ToString());
             }
-            else if (item is Variable)
+            else if (item is ElementalFunction elem)
             {
-                ((Variable)item).Evaluate();
+                elem.Evaluate();
+                Console.WriteLine(elem.Value!.ToString());
             }
-            else if (item is FunctionCall)
+            else if (item is Variable variable1)
             {
-                ((FunctionCall)item).Evaluate();
+                variable1.Evaluate();
             }
-            else if (item is Conditional)
+            else if (item is FunctionCall call)
             {
-                ((Conditional)item).Evaluate();
+                call.Evaluate();
             }
-            else if (item is Print)
+            else if (item is Conditional conditional)
             {
-                ((Print)item).Evaluate();
+                conditional.Evaluate();
+            }
+            else if (item is Print print)
+            {
+                print.Evaluate();
             }
         }
 

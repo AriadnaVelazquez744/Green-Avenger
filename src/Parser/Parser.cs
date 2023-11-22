@@ -30,7 +30,7 @@ public class Parser
             //Si el token actual coincide con el nombre de alguna de alguna de las funciones elementales definidas se parsea como tal, en caso de no devolver nada es un error de invalidez en el uso 
             if (currentToken.Type is TokenType.ElementalFunctions)
             {
-                Number value = ParseElementalFunction(errors, currentToken);
+                ElementalFunction value = ParseElementalFunction(errors, currentToken);
                 if (value is null)
                     errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, String.Format("The number of arguments in the function {0} is wrong", currentToken.Value)));
                 else
@@ -102,34 +102,10 @@ public class Parser
                 }
             }
 
-            
-            // else if (currentToken.Type == TokenType.Text)
-            // {
-            //     Expression exp = ParseExpression()!;
-            //     nodes.Add(exp);
-            //     // Expression literal;
-            //     // if (Stream.Next(TokenValues.Concat))
-            //     // {
-            //     //     literal = ParseConcat(errors, currentToken)!;
-            //     //     if (literal is null)
-            //     //         errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Wrong concat declaration"));
-            //     //     else
-            //     //         nodes.Add(literal!);
-            //     // }
-            //     // else 
-            //     // {
-            //     //     literal = ParseBooleanExpression()!;
-            //     //     if (literal is null)
-            //     //         errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Wrong implementation of a text"));
-            //     //     else
-            //     //         nodes.Add(literal!);
-            //     // }
-            // }
-
             //Es un operador booleano por lo que este es el análisis que se le realiza.
             else if (currentToken.Value.ToString() == "!")
             {
-                Not1 negation = ParseNot(errors, currentToken)!;
+                Not negation = ParseNot(errors, currentToken)!;
                 if (negation is null)
                     errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Wrong use of \"!\""));
                 else
@@ -172,13 +148,14 @@ public class Parser
         //no se incluye en la lista de ASTNode.
         //Además, en el caso de la utilización de variables aquí sí se guarda en la lista el valor obtenido con el parseo de expresión si es que la variable existe en este scope.
 
-        while(!Stream.Next(TokenValues.ClosedBracket) || !Stream.Next(TokenValues.StatementSeparator))
+        while(!Stream.Next(TokenValues.ClosedBracket) && !Stream.Next(TokenValues.StatementSeparator))
         {
+            Stream.MoveNext(1);
             Token currentToken = Stream.LookAhead();
 
             if (currentToken.Type is TokenType.ElementalFunctions)
             {
-                Number value = ParseElementalFunction(errors, currentToken);
+                ElementalFunction value = ParseElementalFunction(errors, currentToken);
                 if (value is null)
                     errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, String.Format("The number of arguments in the function {0} is wrong", currentToken.Value)));
                 else
@@ -233,31 +210,9 @@ public class Parser
                 
             }
 
-            
-            // else if (currentToken.Type == TokenType.Text)
-            // {
-            //     Expression literal;
-            //     if (Stream.Next(TokenValues.Concat))
-            //     {
-            //         literal = ParseConcat(errors, currentToken)!;
-            //         if (literal is null)
-            //             errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Wrong concat declaration"));
-            //         else
-            //             body.Add(literal!);
-            //     }
-            //     else 
-            //     {
-            //         literal = ParseBooleanExpression()!;
-            //         if (literal is null)
-            //             errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Wrong implementation of a text"));
-            //         else
-            //             body.Add(literal!);
-            //     }
-            // }
-
             else if (currentToken.Value.ToString() == "!")
             {
-                Not1 negation = ParseNot(errors, currentToken)!;
+                Not negation = ParseNot(errors, currentToken)!;
                 if (negation is null)
                     errors.Add(new CompilingError(currentToken.Location, ErrorCode.Invalid, "Wrong use of \"!\""));
                 else
@@ -277,39 +232,41 @@ public class Parser
         return body;
     }
     
-    private Number ParseElementalFunction(List<CompilingError> errors, Token Id)
+    private ElementalFunction ParseElementalFunction(List<CompilingError> errors, Token Id)
     {
         //Se crea una nueva variable del tipo ElementalFunction y se comienzan a tomar los valores necesarios: se comprueba si el id es una contante ya que estas no llevan parámetros, de no 
         //pertenecer a ese diccionario se pasa a mediante un bucle tomar todos los valores pasados como argumentos y que tienen que estar separados por comas, luego dependiendo de la cantidad 
         //de argumentos que tiene es el tipo de función que puede ser y si no coincide devuelve un valor nulo; en caso de coincidir en alguno de los casos devuelve directamente un nodo tipo
         //numero con el valor de calculado y la posición dada por el token con el id.
-
-        ElementalFunction func = new();
-
         string id = Id.Value.ToString();
+        List<Expression> arguments = new();
 
-        if (func.Constants.ContainsKey(id))
-            return new(func.Constants[id](), Id.Location);
-
-        if (!Stream.CanLookAhead(0)) return null!;
+        if (id == "PI" || id == "E" || id == "rand")
+            return new(id, arguments, Id.Location);
 
         if (!Stream.Next(TokenValues.OpenBracket))
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "( expected"));
+        Stream.MoveNext(1);
 
-        List<double> arguments = new();
+        int x = 0;
         do
         {
-            if (!Stream.Next(TokenType.Number))
+            if ( x == 1 && Stream.Next(TokenValues.ClosedBracket))
             {
                 errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "argument expected after the ,"));
             }
             else
             {
-                string argument = Stream.LookAhead().Value.ToString();
-                double arg = double.Parse(argument);   
-                arguments.Add(arg);
-            }
+                if (x == 1)
+                    Stream.MoveNext(1);
 
+                Expression? exp = ParseExpression();
+                if (exp is null)
+                    errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "argument expected after the ,"));
+                else
+                    arguments.Add(exp);
+            }
+            x = 1;
         } while (Stream.Next(TokenValues.ValueSeparator));
         
         if (!Stream.Next(TokenValues.ClosedBracket))
@@ -317,16 +274,50 @@ public class Parser
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
         }
 
-        if (arguments.Count == 1 && func.MathFunction.ContainsKey(id))
+        return new(id, arguments, Id.Location);
+    }
+
+    private Conditional ParseConditional(List<CompilingError> errors)
+    {
+        //Se lee token a token teniendo en cuenta la formula sintácticamente correcta de las condicionales.
+
+        if (!Stream.Next(TokenValues.OpenBracket))
+            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
+        Stream.MoveNext(1);
+
+        //La condicionales se parsea como expression para en la evaluación poder obtener un literal booleano. 
+        Expression condition = ParseExpression()!;
+        if (condition is null)
         {
-            return new Number(func.MathFunction[id](arguments[0]), Id.Location);
-        }
-        else if (arguments.Count == 2 && id == "log")
-        {
-            return new Number(func.Log[id](arguments[0], arguments[1]), Stream.LookAhead().Location);
+            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "condition value expected"));
         }
 
-        return null!;
+        if (!Stream.Next(TokenValues.ClosedBracket))
+            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
+
+        if (!Stream.Next(TokenValues.LambdaExpression))
+            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "=> expected"));
+
+        if (!Stream.Next(TokenValues.OpenBracket))
+            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
+
+        //Se inicializan los cuerpos de ambas partes, el if se analiza directamente pues siempre hay que intentar encontrarlo aunque sea vacío y luego en dependencia de si aparece la keyWord 
+        //else se busca el cuerpo de esta. 
+        List<ASTNode> ifBody = ParseBody(errors);
+        List<ASTNode> elseBody = null!;
+
+        if (Stream.Next(TokenValues.Else))
+        {
+            if (!Stream.Next(TokenValues.OpenBracket))
+                errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "() expected"));
+
+            elseBody = ParseBody(errors);
+        }
+
+        if (condition is null)
+            return null!;
+
+        return new Conditional(condition, ifBody, elseBody, Stream.LookAhead().Location);
     }
 
     private FunctionDeclare ParseFunctionDeclaration(List<CompilingError> errors)
@@ -524,53 +515,9 @@ public class Parser
         return new(variables, body, Scope, forLocation.Location);
     }
 
-    private Conditional ParseConditional(List<CompilingError> errors)
+    private Not ParseNot(List<CompilingError> errors, Token tok)
     {
-        //Se lee token a token teniendo en cuenta la formula sintácticamente correcta de las condicionales.
-
-        if (!Stream.Next(TokenValues.OpenBracket))
-            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
-
-
-        //La condicionales se parsea como expression para en la evaluación poder obtener un literal booleano. 
-        Expression condition = ParseExpression()!;
-        if (condition is null)
-        {
-            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "condition value expected"));
-        }
-
-
-        if (!Stream.Next(TokenValues.ClosedBracket))
-            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
-
-        if (!Stream.Next(TokenValues.LambdaExpression))
-            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "=> expected"));
-
-        if (!Stream.Next(TokenValues.OpenBracket))
-            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
-
-
-        //Se inicializan los cuerpos de ambas partes, el if se analiza directamente pues siempre hay que intentar encontrarlo aunque sea vacío y luego en dependencia de si aparece la keyWord 
-        //else se busca el cuerpo de esta. 
-        List<ASTNode> ifBody = ParseBody(errors);
-        List<ASTNode> elseBody = null!;
-
-        if (Stream.Next(TokenValues.Else))
-        {
-            if (!Stream.Next(TokenValues.OpenBracket))
-                errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "() expected"));
-
-            elseBody = ParseBody(errors);
-        }
-
-        if (condition is null)
-            return null!;
-
-        return new Conditional(condition, ifBody, elseBody, Stream.LookAhead().Location);
-    }
-
-    private Not1 ParseNot(List<CompilingError> errors, Token tok)
-    {
+        Stream.MoveNext(1);
         //Se parsea una expresión que se le pasa al nodo not como valor.
         Expression exp = ParseExpression()!;
         if (exp is null)
@@ -588,6 +535,7 @@ public class Parser
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "( expected"));
         }
+        Stream.MoveNext(1);
 
         Expression exp = ParseExpression()!;
 
@@ -599,20 +547,6 @@ public class Parser
         return new Print(exp, exp.Location);
     }
 
-    // private Expression? ParseConcat(List<CompilingError> errors, Token text)
-    // {
-    //     string left = text.Value.ToString();
-
-    //     Expression? Right = ParseText()!;
-    //     if (Right == null)
-    //     {
-    //         errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "Expected text for the concat operation"));
-    //         return null;
-    //     }
-    //     string right = Right.Value!.ToString()!;
-
-    //     return new Text(left + right, text.Location);
-    // }
 
     private Expression? ParseNumber()
     {
@@ -624,9 +558,21 @@ public class Parser
     private Expression? ParseText()
     {
         //Comprueba si el token en la posición actual es un texto y de ser así devuelve ese valor
-        if (Stream.LookAhead().Type is not TokenType.Text || Stream.LookAhead().Type is not TokenType.BooleanExpression) return null;
+        if (Stream.LookAhead().Type is not TokenType.Text) return null;
 
         return new Text(Stream.LookAhead().Value, Stream.LookAhead().Location);
+    }
+    private Expression? ParseLiteral()
+    {
+        if (Stream.LookAhead().Type is not TokenType.BooleanExpression) return null;
+
+        return new BoolLiteral(bool.Parse(Stream.LookAhead().Value.ToString()), Stream.LookAhead().Location);
+    }
+    private Expression? ParseVar()
+    {
+        if (Stream.LookAhead().Type is not TokenType.Identifier) return null;
+
+        return new Var(Stream.LookAhead().Value.ToString(), Scope, Stream.LookAhead().Location);
     }
    
    
@@ -642,15 +588,12 @@ public class Parser
    
    
    
-    // private Expression? ParseExpression()
-    // {
-    //     return ParseExpressionLv1();
-    // }
 
     // private Expression? ParseExpressionLv0()
     // {
     //     if (Stream.Next(TokenValues.OpenBracket))
     //     {
+    //         Stream.MoveNext(1);
     //         Expression? exp = ParseExpression();
             
     //         if (exp == null)
@@ -660,27 +603,9 @@ public class Parser
             
     //         return exp;
     //     }
-    //     return ParseExpressionLv4();
-    // }
-    // private Expression? ParseExpressionLv1()
-    // {
-    //     Expression? newLeft = ParseExpressionLv0();
-    //     Expression? exp = ParseExpressionLv1_(newLeft);
-    //     return exp;
+    //     return null;
     // }
     
-    // private Expression? ParseExpressionLv2()
-    // {
-    //     Expression? newLeft = ParseExpressionLv1();
-    //     return ParseExpressionLv2_(newLeft);
-    // }
-    
-    // private Expression? ParseExpressionLv3()
-    // {
-    //     Expression? newLeft = ParseExpressionLv2();
-    //     return ParseExpressionLv3_(newLeft);
-    // }
-
 
     private Expression? ParseExpressionLv1_(Expression? left)
     {
@@ -768,12 +693,19 @@ public class Parser
         Expression? newLeft = ParseExpressionLv7();
         return ParseExpressionLv6_(newLeft);
     }
+    
     private Expression? ParseExpressionLv7()
     {
+        // Expression? exp = ParseExpressionLv0();
+        // if (exp != null) return exp;
+
         Expression? exp = ParseNumber();
         if (exp != null) return exp;
 
         exp = ParseText();
+        if (exp != null) return exp;
+
+        exp = ParseLiteral();
         if (exp != null) return exp;
 
         return null;
@@ -879,12 +811,31 @@ public class Parser
 
         return ParseExpressionLv6_(pow);
     }
+    
+    private Expression? ParseConcat(Expression? left)
+    {
+        Concat concat = new(Stream.LookAhead().Location);
+
+        if (left is null || !Stream.Next(TokenValues.Concat))   return null;
+        Stream.MoveNext(1);
+        concat.Left = left;
+
+        Expression? right = ParseExpressionLv1();
+        if (right == null)
+        {
+            Stream.MoveBack(2);
+            return null;
+        }
+        concat.Right = right;
+
+        return ParseExpressionLv1_(concat);
+    }
 
     private Expression? ParsePropositional(Expression? left)
     {
         PropOp prop = new(Stream.LookAhead().Location);
 
-        if (left is null || (!Stream.Next(TokenValues.And) && Stream.LookAhead().Value != "|")) return null;
+        if (left is null || (!Stream.Next(TokenValues.And) && !Stream.Next(TokenValues.Or))) return null;
 
         prop.Left = left;
         prop.Op = Stream.LookAhead().Value;
@@ -905,10 +856,12 @@ public class Parser
     {
         Equality equal = new(Stream.LookAhead().Location);
 
-        if (left is null || (!Stream.Next(TokenValues.Equal) && Stream.LookAhead().Value != "!="))  return null;
+        if (left is null || (!Stream.Next(TokenValues.Equal) && !Stream.Next(TokenValues.Different)))  return null;
 
         equal.Left = left;
         equal.Op = Stream.LookAhead().Value;
+
+        Stream.MoveNext(1);
 
         Expression? right = ParseExpressionLv3();
         if (right == null)
@@ -924,10 +877,12 @@ public class Parser
     {
         BooleanOp boolOp = new(Stream.LookAhead().Location);
 
-        if (left is null || (!Stream.Next(TokenValues.Less) && Stream.LookAhead().Value != "<=" && Stream.LookAhead().Value != ">" && Stream.LookAhead().Value != ">="))    return null;
+        if (left is null || (!Stream.Next(TokenValues.Less) && !Stream.Next(TokenValues.LessOrEqual) && !Stream.Next(TokenValues.More) && !Stream.Next(TokenValues.MoreOrEqual)))    return null;
 
         boolOp.Left = left;
         boolOp.Op = Stream.LookAhead().Value;
+
+        Stream.MoveNext(1);
 
         Expression? right = ParseExpressionLv3();
         if (right == null)
@@ -938,153 +893,5 @@ public class Parser
         boolOp.Right = right;
 
         return ParseExpressionLv3_(boolOp);
-    }
-    
-    private Expression? ParseConcat(Expression? left)
-    {
-        Concat concat = new(Stream.LookAhead().Location);
-
-        if (left is null || !Stream.Next(TokenValues.Concat))   return null;
-
-        concat.Left = left;
-
-        Expression? right = ParseExpressionLv1();
-        if (right == null)
-        {
-            Stream.MoveBack(2);
-            return null;
-        }
-        concat.Right = right;
-
-        return ParseExpressionLv1_(concat);
-    }
-
-
-    // private BooleanExpression? ParseBooleanExpression()
-    // {
-    //     BooleanExpression? newLeft = ParseBooleanExpressionLv1();
-    //     return ParseBooleanExpressionLv1_(newLeft!);
-    // }
-    // private BooleanExpression? ParseBooleanExpressionLv1()
-    // {
-    //     BooleanExpression? newLeft = ParseBooleanExpressionLv2();
-    //     return ParseBooleanExpressionLv2_(newLeft!);
-    // }
-    // private BooleanExpression? ParseBooleanExpressionLv1_(BooleanExpression left)
-    // {
-    //     if (Stream.Next(TokenValues.And))
-    //     {
-    //         And and = new(Stream.LookAhead().Location)
-    //         {
-    //             Left = left,
-    //             Right = ParseBooleanExpressionLv2()
-    //         };
-    //         return ParseBooleanExpressionLv1_(and);
-    //     }
-
-    //     if (Stream.Next(TokenValues.Or))
-    //     {
-    //         Or or = new(Stream.LookAhead().Location)
-    //         {
-    //             Left = left,
-    //             Right = ParseBooleanExpressionLv2()
-    //         };
-    //         return ParseBooleanExpressionLv1_(or);
-    //     }        
-
-    //     return left;
-    // }
-    // private BooleanExpression? ParseBooleanExpressionLv2()
-    // {
-    //     BooleanExpression? newLeft = ParseBooleanExpressionLv3();
-    //     return ParseBooleanExpressionLv3_(newLeft!); 
-    // }
-    // private BooleanExpression? ParseBooleanExpressionLv2_(BooleanExpression left)
-    // {
-    //     if (Stream.Next(TokenValues.Equal))
-    //     {
-    //         Equal equal = new(Stream.LookAhead().Location)
-    //         {
-    //             Left = left,
-    //             Right = ParseBooleanExpressionLv3()
-    //         };
-    //         return ParseBooleanExpressionLv2_(equal);
-    //     }        
-
-    //     if (Stream.Next(TokenValues.Different))
-    //     {
-    //         Different different = new(Stream.LookAhead().Location)
-    //         {
-    //             Left = left,
-    //             Right = ParseBooleanExpressionLv3()
-    //         };
-    //         return ParseBooleanExpressionLv2_(different);
-    //     }        
-
-    //     if (Stream.Next(TokenValues.Less))
-    //     {
-    //         Less less = new(Stream.LookAhead().Location)
-    //         {
-    //             Left = left,
-    //             Right = ParseBooleanExpressionLv3()
-    //         };
-    //         return ParseBooleanExpressionLv2_(less);
-    //     }        
-
-    //     if (Stream.Next(TokenValues.LessOrEqual))
-    //     {
-    //         LessOrEqual lessOrEqual = new(Stream.LookAhead().Location)
-    //         {
-    //             Left = left,
-    //             Right = ParseBooleanExpressionLv3()
-    //         };
-    //         return ParseBooleanExpressionLv2_(lessOrEqual);
-    //     }        
-
-    //     if (Stream.Next(TokenValues.More))
-    //     {
-    //         More more = new(Stream.LookAhead().Location)
-    //         {
-    //             Left = left,
-    //             Right = ParseBooleanExpressionLv3()
-    //         };
-    //         return ParseBooleanExpressionLv2_(more);
-    //     }        
-
-    //     if (Stream.Next(TokenValues.MoreOrEqual))
-    //     {
-    //         MoreOrEqual moreOrEqual = new(Stream.LookAhead().Location)
-    //         {
-    //             Left = left,
-    //             Right = ParseBooleanExpressionLv3()
-    //         };
-    //         return ParseBooleanExpressionLv2_(moreOrEqual);
-    //     }        
-
-    //     return left;
-    // }
-    // private BooleanExpression? ParseBooleanExpressionLv3()
-    // {
-    //     BooleanExpression? newLeft = ParseBooleanExpressionLv4();
-    //     return newLeft; 
-    // }
-    // private BooleanExpression? ParseBooleanExpressionLv3_(BooleanExpression left)
-    // {
-    //     if (Stream.Next(TokenValues.Not))
-    //     {
-    //         Not not = new(Stream.LookAhead().Location);
-    //         not.Right = ParseBooleanExpressionLv4();
-    //         return ParseBooleanExpressionLv3_(not);
-    //     }
-
-    //     return left;
-    // }
-    // private BooleanExpression? ParseBooleanExpressionLv4()
-    // {
-    //     if (Stream.Next(TokenType.BooleanExpression))
-    //     {
-        
-    //     }
-    //     throw new NotImplementedException();
-    // }
+    }   
 }

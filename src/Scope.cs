@@ -5,7 +5,7 @@ public class Scope
     //de las funciones que presentan una estructura similar a dichas variables .
     //Los métodos presentan nombres muy especificativos por lo que no los comentaré.
     
-    public Dictionary<string, object> Variables { get; set; }
+    public Dictionary<string, Expression> Variables { get; set; }
     public Dictionary<string, object> FuncVars { get; set; }
     public Scope()
     {
@@ -17,7 +17,7 @@ public class Scope
     {
         return Variables.ContainsKey(name);
     }
-    public void AddVariable(string name, object value)
+    public void AddVariable(string name, Expression value)
     {
         Variables.Add(name, value);
     }
