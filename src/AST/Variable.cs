@@ -17,41 +17,62 @@ public class Variable : ASTNode
         //Para revisar la semántica se comprueba que todos los elementos que conforman su rango de utilización sean semánticamente correctos.
         bool x = true;
 
-        foreach (var name in Variables)
+        //Este diccionario contendrá las variables que se modifican dentro de un scope hijo para que se puedan devolver a su valor original una vez terminado.
+        Dictionary<string, Expression> redefine = new();
+        
+        //Para evaluar las variables lo primero es añadirlas al scope para poder llamar sus valores, y se evalúa la expresión que compone su valor antes de añadirla
+        foreach (var item in Variables)
         {
-            
+            x = item.Value.CheckSemantic(context, scope, errors);
+            //En caso de que la variable haya sido declarada en un scope padre de añaden los elementos de esa variable al diccionario redefine para guardarla y se elimina del scope para poder incluir la nueva
+            if (scope.ContainsVariable(item.Key))
+            {
+                redefine.Add(item.Key, scope.Variables[item.Key]);
+                scope.Variables.Remove(item.Key);
+            }
+            scope.AddVariable(item.Key, item.Value!);
         }
-        foreach (var item in Range)
+
+        if (Range is not null)
         {
-            if (item is Expression expression)
+            foreach (var item in Range)
             {
-                x = expression.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Variable variable)
-            {
-                x = variable.CheckSemantic(context, scope, errors);
-            }
-            else if (item is FunctionCall call)
-            {
-                x = call.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Conditional conditional)
-            {
-                x = conditional.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Print print)
-            {
-                x = print.CheckSemantic(context, scope, errors);
-            }
-            else if (item is ElementalFunction elem)
-            {
-                x = elem.CheckSemantic(context, scope, errors);
+                if (item is Expression expression)
+                {
+                    x = expression.CheckSemantic(context, scope, errors);
+                }
+                else if (item is Variable variable)
+                {
+                    x = variable.CheckSemantic(context, scope, errors);
+                }
+                else if (item is FunctionCall call)
+                {
+                    x = call.CheckSemantic(context, scope, errors);
+                }
+                else if (item is Conditional conditional)
+                {
+                    x = conditional.CheckSemantic(context, scope, errors);
+                }
+                else if (item is Print print)
+                {
+                    x = print.CheckSemantic(context, scope, errors);
+                }
             }
         }
         
         if (x is false)
             errors.Add(new CompilingError(Location, ErrorCode.Invalid, "At least one of the action where the variables are use has a Semantic problem"));
         
+        //Finalmente se eliminan las variables del scope para que no puedan ser utilizadas en otro entorno que no sea el ya definido y evaluado.
+        foreach (var item in Variables)
+        {
+            scope.Variables.Remove(item.Key);
+            if (redefine.ContainsKey(item.Key))
+            {
+                scope.AddVariable(item.Key, redefine[item.Key]);
+            }
+        }
+
         return x;
     }
 
@@ -63,13 +84,14 @@ public class Variable : ASTNode
         //Para evaluar las variables lo primero es añadirlas al scope para poder llamar sus valores, y se evalúa la expresión que compone su valor antes de añadirla
         foreach (var item in Variables)
         {
+            item.Value.Evaluate();
             //En caso de que la variable haya sido declarada en un scope padre de añaden los elementos de esa variable al diccionario redefine para guardarla y se elimina del scope para poder incluir la nueva
             if (Scope.ContainsVariable(item.Key))
             {
                 redefine.Add(item.Key, Scope.Variables[item.Key]);
                 Scope.Variables.Remove(item.Key);
             }
-            Scope.AddVariable(item.Key, (Expression)item.Value.Value!);
+            Scope.AddVariable(item.Key, (item.Value.Value! as Expression)!);
         }
 
         //Lo siguiente es evaluar cada elemento que compone su rango de utilización, en caso de que no tenga rango los 
@@ -80,31 +102,26 @@ public class Variable : ASTNode
             foreach (var item in Range)
             {
                 if (item is Expression expression)
-            {
-                expression.Evaluate();
-                Console.WriteLine(expression.Value!.ToString());
-            }
-            else if (item is ElementalFunction elem)
-            {
-                elem.Evaluate();
-                Console.WriteLine(elem.Value!.ToString());
-            }
-            else if (item is Variable variable)
-            {
-                variable.Evaluate();
-            }
-            else if (item is FunctionCall call)
-            {
-                call.Evaluate();
-            }
-            else if (item is Conditional conditional)
-            {
-                conditional.Evaluate();
-            }
-            else if (item is Print print)
-            {
-                print.Evaluate();
-            }
+                {
+                    expression.Evaluate();
+                    Console.WriteLine(expression.Value!.ToString());
+                }
+                else if (item is Variable variable)
+                {
+                    variable.Evaluate();
+                }
+                else if (item is FunctionCall call)
+                {
+                    call.Evaluate();
+                }
+                else if (item is Conditional conditional)
+                {
+                    conditional.Evaluate();
+                }
+                else if (item is Print print)
+                {
+                    print.Evaluate();
+                }
             }
         }
         else

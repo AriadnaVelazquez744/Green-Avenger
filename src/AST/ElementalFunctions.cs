@@ -1,4 +1,4 @@
-public class ElementalFunction : ASTNode
+public class ElementalFunction : Expression
 {    
     //Recibe el nombre de la función a llamar y la lista de los argumentos, tiene como propiedades tres 
     //diccionarios que tienen las funciones definidas y listas para que solo sea pasarles el valor y que 
@@ -8,8 +8,9 @@ public class ElementalFunction : ASTNode
     public Dictionary<string, Func<double, double, double>> Log { get; }
     public string Id { get; }
     List<Expression> Arg { get; set; }
-    public double Value { get; set; }
-    
+    public override object? Value { get; set; }
+    public override ExpressionType Type { get; set; }
+
     public ElementalFunction(string id, List<Expression> arg, CodeLocation location) : base(location)
     {
         //Los diccionarios de las funciones contienen elementos del tipo Func que se encuentran definidas en este espacio
@@ -75,6 +76,7 @@ public class ElementalFunction : ASTNode
             check = item.CheckSemantic(context, scope, errors);
         }
 
+        Type = ExpressionType.Number;
         return check;
     }
 

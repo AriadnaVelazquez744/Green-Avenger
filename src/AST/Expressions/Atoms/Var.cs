@@ -3,12 +3,12 @@ public class Var : AtomExpression
     public Var(string id, Scope scope, CodeLocation location) : base(location)
     {
         Id = id;
-        Scope = scope;
+        Scop = scope;
     }
 
     public override object? Value { get; set; }
     public string Id { get; }
-    public Scope Scope { get; }
+    public Scope Scop { get; }
 
     public override ExpressionType Type
     {
@@ -28,7 +28,7 @@ public class Var : AtomExpression
 
     public override void Evaluate()
     {
-        Expression exp = Scope.Variables[Id];
+        Expression exp = Scop.Variables[Id];
         exp.Evaluate();
         Value = exp.Value!;
     }
