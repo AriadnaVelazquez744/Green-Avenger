@@ -15,8 +15,10 @@ public class Conditional : ASTNode
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
         bool check = true;
+        bool x = true;
         //Se revisa que la condicional sea semánticamente correcta
         check = Condition.CheckSemantic(context, scope, errors);
+        x = check;
 
         foreach (var item in IfBody)
         {
@@ -44,6 +46,8 @@ public class Conditional : ASTNode
             {
                 check = elem.CheckSemantic(context, scope, errors);
             }
+
+            if (check is false)    x = check;
         }
         
         if (ElseBody != null)
@@ -74,10 +78,12 @@ public class Conditional : ASTNode
                 {
                     check = elem.CheckSemantic(context, scope, errors);
                 }
+
+                if (check is false)    x = check;
             }
         }
 
-        return check;
+        return check && x;
     }
 
     public override void Evaluate(Context context, Scope scope)

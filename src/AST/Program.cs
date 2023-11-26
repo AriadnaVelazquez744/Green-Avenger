@@ -15,44 +15,47 @@ public class MainProgram : ASTNode
     {
         //Para revisar la semántica se comprueba que todos los nodos sean semánticamente correctos.
 
-        bool right = true;
+        bool check = true;
+        bool x = true;
         
         foreach (var item in Statements)
         {
             if (item is Expression expression)
             {
-                right = expression.CheckSemantic(context, scope, errors);
+                check = expression.CheckSemantic(context, scope, errors);
             }
             else if (item is Variable variable)
             {
-                right = variable.CheckSemantic(context, scope, errors);
+                check = variable.CheckSemantic(context, scope, errors);
             }
             else if (item is FunctionCall call)
             {
-                right = call.CheckSemantic(context, scope, errors);
+                check = call.CheckSemantic(context, scope, errors);
             }
             else if (item is Conditional conditional)
             {
-                right = conditional.CheckSemantic(context, scope, errors);
+                check = conditional.CheckSemantic(context, scope, errors);
             }
             else if (item is Print print)
             {
-                right = print.CheckSemantic(context, scope, errors);
+                check = print.CheckSemantic(context, scope, errors);
             }
             else if (item is FunctionDeclare declare)
             {
-                right = declare.CheckSemantic(context, scope, errors);
+                check = declare.CheckSemantic(context, scope, errors);
             }
             else if (item is ElementalFunction elem)
             {
-                right = elem.CheckSemantic(context, scope, errors);
+                check = elem.CheckSemantic(context, scope, errors);
             }
+
+            if (check is false)  x = false;
         }
 
-        if (right is false)
+        if (x is false)
             errors.Add(new CompilingError(Location, ErrorCode.Invalid, "At least one of the statement has a semantic problem"));
 
-        return right;
+        return check && x;
     }
 
     public override void Evaluate(Context context, Scope scope)
@@ -62,7 +65,7 @@ public class MainProgram : ASTNode
         {
             if (item is FunctionDeclare declare)
             {
-                Context.AddFuncExpression(declare);                
+                context.AddFuncExpression(declare);                
                 Statements.Remove(item);
             }
         }

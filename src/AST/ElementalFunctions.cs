@@ -49,7 +49,8 @@ public class ElementalFunction : Expression
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
         bool check = true;
-        
+        bool x = true;
+
         if (Arg.Count == 1 && !MathFunction.ContainsKey(Id))
         {
             check = false;
@@ -71,13 +72,17 @@ public class ElementalFunction : Expression
             errors.Add(new CompilingError(Location, ErrorCode.Invalid, "The number of arguments don't match"));
         }
 
+        if ( check is false) x = false;
+
         foreach (var item in Arg)
         {
             check = item.CheckSemantic(context, scope, errors);
+
+            if (check is false) x = false;
         }
 
         Type = ExpressionType.Number;
-        return check;
+        return check && x;
     }
 
     public override void Evaluate(Context context, Scope scope)
