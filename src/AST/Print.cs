@@ -11,11 +11,11 @@ public class Print : ASTNode
         return Expression!.CheckSemantic(context, scope, errors);
     }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
         if (Expression is not null)
         {
-            Expression.Evaluate();
+            Expression.Evaluate(context, scope);
             Console.WriteLine(Expression.Value!.ToString());
         }
     }

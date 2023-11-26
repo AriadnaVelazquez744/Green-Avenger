@@ -80,8 +80,9 @@ public class Conditional : ASTNode
         return check;
     }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
+        Condition.Evaluate(context, scope);
         //Se evalúa la condicional y en caso de que la condicional sea verdadera se evalúa cada elemento dentro del if, en caso de que sea false se evalúa en cuerpo del else en caso de que exista.
         if (bool.Parse(Condition.Value!.ToString()!))
         {
@@ -89,29 +90,29 @@ public class Conditional : ASTNode
             {
                 if (item is Expression expression)
                 {
-                    expression.Evaluate();
+                    expression.Evaluate(context, scope);
                     Console.WriteLine(expression.Value!.ToString());
                 }
                 else if (item is ElementalFunction elem)
                 {
-                    elem.Evaluate();
+                    elem.Evaluate(context, scope);
                     Console.WriteLine(elem.Value!.ToString());
                 }
                 else if (item is Variable variable)
                 {
-                    variable.Evaluate();
+                    variable.Evaluate(context, scope);
                 }
                 else if (item is FunctionCall call)
                 {
-                    call.Evaluate();
+                    call.Evaluate(context, scope);
                 }
                 else if (item is Conditional conditional)
                 {
-                    conditional.Evaluate();
+                    conditional.Evaluate(context, scope);
                 }
                 else if (item is Print print)
                 {
-                    print.Evaluate();
+                    print.Evaluate(context, scope);
                 }
             }
         }
@@ -121,29 +122,29 @@ public class Conditional : ASTNode
             {
                 if (item is Expression expression)
                 {
-                    expression.Evaluate();
+                    expression.Evaluate(context, scope);
                     Console.WriteLine(expression.Value!.ToString());
                 }
                 else if (item is ElementalFunction elem)
                 {
-                    elem.Evaluate();
+                    elem.Evaluate(context, scope);
                     Console.WriteLine(elem.Value!.ToString());
                 }
                 else if (item is Variable variable)
                 {
-                    variable.Evaluate();
+                    variable.Evaluate(context, scope);
                 }
                 else if (item is FunctionCall call)
                 {
-                    call.Evaluate();
+                    call.Evaluate(context, scope);
                 }
                 else if (item is Conditional conditional)
                 {
-                    conditional.Evaluate();
+                    conditional.Evaluate(context, scope);
                 }
                 else if (item is Print print)
                 {
-                    print.Evaluate();
+                    print.Evaluate(context, scope);
                 }
             }
         }

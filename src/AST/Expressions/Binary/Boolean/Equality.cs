@@ -23,10 +23,10 @@ public class Equality : BinaryExpression
         return right && left;
     }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
-        Right!.Evaluate();
-        Left!.Evaluate();
+        Right!.Evaluate(context, scope);
+        Left!.Evaluate(context, scope);
 
         bool eq = Left.Value!.Equals(Right.Value!);
         

@@ -21,10 +21,10 @@ public class BooleanOp : BinaryExpression
         Type = ExpressionType.Boolean;
         return right && left;
     }
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
-        Right!.Evaluate();
-        Left!.Evaluate();
+        Right!.Evaluate(context, scope);
+        Left!.Evaluate(context, scope);
 
         if (double.TryParse(Left.Value?.ToString(), out double leftValue) && double.TryParse(Right.Value?.ToString(), out double rightValue))
         {

@@ -51,7 +51,7 @@ else
     else
     {
         Console.WriteLine("Iniciando Evaluación");
-        program.Evaluate();
+        program.Evaluate(context, scope);
         //Console.WriteLine(program);
     }
 }

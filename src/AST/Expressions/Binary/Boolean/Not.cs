@@ -23,9 +23,9 @@ public class Not : Expression
         return exp;
     }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
-        Expression!.Evaluate();
+        Expression!.Evaluate(context, scope);
         
         bool exp = Convert.ToBoolean(Expression.Value);
 

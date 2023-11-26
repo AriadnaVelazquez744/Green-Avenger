@@ -4,12 +4,10 @@ public class Variable : ASTNode
     //haberse separado por comas, y lo que sería como su rango de uso que es todo en lo que se puede utilizar esa variable
     public Dictionary<string, Expression> Variables { get; set; }
     public List<ASTNode> Range { get; set; }
-    public Scope Scope { get; set; }
-    public Variable(Dictionary<string, Expression> variable, List<ASTNode> range, Scope scope, CodeLocation location) : base(location)
+    public Variable(Dictionary<string, Expression> variable, List<ASTNode> range, CodeLocation location) : base(location)
     {
         Variables = variable;
         Range = range;
-        Scope = scope;
     }
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
@@ -76,7 +74,7 @@ public class Variable : ASTNode
         return x;
     }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
         //Este diccionario contendrá las variables que se modifican dentro de un scope hijo para que se puedan devolver a su valor original una vez terminado.
         Dictionary<string, Expression> redefine = new();
@@ -84,14 +82,14 @@ public class Variable : ASTNode
         //Para evaluar las variables lo primero es añadirlas al scope para poder llamar sus valores, y se evalúa la expresión que compone su valor antes de añadirla
         foreach (var item in Variables)
         {
-            item.Value.Evaluate();
+            //item.Value.Evaluate(context, scope);
             //En caso de que la variable haya sido declarada en un scope padre de añaden los elementos de esa variable al diccionario redefine para guardarla y se elimina del scope para poder incluir la nueva
-            if (Scope.ContainsVariable(item.Key))
+            if (scope.ContainsVariable(item.Key))
             {
-                redefine.Add(item.Key, Scope.Variables[item.Key]);
-                Scope.Variables.Remove(item.Key);
+                redefine.Add(item.Key, scope.Variables[item.Key]);
+                scope.Variables.Remove(item.Key);
             }
-            Scope.AddVariable(item.Key, (item.Value.Value! as Expression)!);
+            scope.AddVariable(item.Key, item.Value);
         }
 
         //Lo siguiente es evaluar cada elemento que compone su rango de utilización, en caso de que no tenga rango los 
@@ -103,24 +101,24 @@ public class Variable : ASTNode
             {
                 if (item is Expression expression)
                 {
-                    expression.Evaluate();
+                    expression.Evaluate(context, scope);
                     Console.WriteLine(expression.Value!.ToString());
                 }
                 else if (item is Variable variable)
                 {
-                    variable.Evaluate();
+                    variable.Evaluate(context, scope);
                 }
                 else if (item is FunctionCall call)
                 {
-                    call.Evaluate();
+                    call.Evaluate(context, scope);
                 }
                 else if (item is Conditional conditional)
                 {
-                    conditional.Evaluate();
+                    conditional.Evaluate(context, scope);
                 }
                 else if (item is Print print)
                 {
-                    print.Evaluate();
+                    print.Evaluate(context, scope);
                 }
             }
         }
@@ -128,17 +126,18 @@ public class Variable : ASTNode
         {
             foreach (var item in Variables)
             {
-                Console.WriteLine(Scope.Variables[item.Key].ToString());
+                item.Value.Evaluate(context, scope);
+                Console.WriteLine(scope.Variables[item.Key].Value!.ToString());
             }
         }
 
         //Finalmente se eliminan las variables del scope para que no puedan ser utilizadas en otro entorno que no sea el ya definido y evaluado.
         foreach (var item in Variables)
         {
-            Scope.Variables.Remove(item.Key);
+            scope.Variables.Remove(item.Key);
             if (redefine.ContainsKey(item.Key))
             {
-                Scope.AddVariable(item.Key, redefine[item.Key]);
+                scope.AddVariable(item.Key, redefine[item.Key]);
             }
         }
     }

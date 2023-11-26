@@ -5,10 +5,10 @@ public class Add : BinaryExpression
     public override ExpressionType Type { get; set; }
     public override object? Value { get; set; }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
-        Right!.Evaluate();
-        Left!.Evaluate();
+        Right!.Evaluate(context, scope);
+        Left!.Evaluate(context, scope);
 
         Value = (double)Right.Value! + (double)Left.Value!;
     }

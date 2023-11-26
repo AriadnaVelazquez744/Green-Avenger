@@ -21,10 +21,10 @@ public class Concat : BinaryExpression
         return right && left;
     }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
-        Right!.Evaluate();
-        Left!.Evaluate();
+        Right!.Evaluate(context, scope);
+        Left!.Evaluate(context, scope);
 
         Value = String.Format("{0}{1}", Left.Value!.ToString(), Right.Value!.ToString());
     }

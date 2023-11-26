@@ -1,20 +1,13 @@
 public class Var : AtomExpression
 {
-    public Var(string id, Scope scope, CodeLocation location) : base(location)
+    public Var(string id, CodeLocation location) : base(location)
     {
         Id = id;
-        Scop = scope;
     }
 
     public override object? Value { get; set; }
     public string Id { get; }
-    public Scope Scop { get; }
-
-    public override ExpressionType Type
-    {
-        get => ExpressionType.Identifier;
-        set { }
-    }
+    public override ExpressionType Type { get; set; }
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
@@ -23,13 +16,16 @@ public class Var : AtomExpression
             errors.Add(new CompilingError(Location, ErrorCode.Invalid, String.Format("The variable {0} has not been declared in this space", Id)));
             return false;
         }
+
+        Expression exp = scope.Variables[Id];
+        Type = exp.Type;
         return true;
     }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
-        Expression exp = Scop.Variables[Id];
-        exp.Evaluate();
+        Expression exp = scope.Variables[Id];
+        exp.Evaluate(context, scope);
         Value = exp.Value!;
     }
 }

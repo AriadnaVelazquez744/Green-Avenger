@@ -84,6 +84,14 @@ public class Parser
                     else
                         nodes.Add(call!);
                 }
+                else
+                {
+                    Expression exp = ParseExpression(errors)!;
+                    if (exp is null)
+                        errors.Add(new CompilingError(currentToken.Location, ErrorCode.Unknown, String.Format("The element {0} doesn't belong to the syntax", currentToken.Value.ToString())));
+                    else
+                        nodes.Add(exp!);
+                }
             }
 
             else if (currentToken.Value.ToString() == ";")
@@ -163,6 +171,14 @@ public class Parser
                     else
                         body.Add(call!);
                 }
+                else
+                {
+                    Expression exp = ParseExpression(errors)!;
+                    if (exp is null)
+                        errors.Add(new CompilingError(currentToken.Location, ErrorCode.Unknown, String.Format("The element {0} doesn't belong to the syntax", currentToken.Value.ToString())));
+                    else
+                        body.Add(exp!);
+                }
             }
 
             else
@@ -173,6 +189,7 @@ public class Parser
                 else
                     body.Add(exp!);
             }
+            
             Stream.MoveNext(1);
         }   
 
@@ -251,6 +268,7 @@ public class Parser
         if (!Stream.Next(TokenValues.OpenBracket))
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
 
+        Stream.MoveNext(1);
         //Se inicializan los cuerpos de ambas partes, el if se analiza directamente pues siempre hay que intentar encontrarlo aunque sea vacío y luego en dependencia de si aparece la keyWord 
         //else se busca el cuerpo de esta. 
         List<ASTNode> ifBody = ParseBody(errors);
@@ -260,6 +278,7 @@ public class Parser
         {
             if (!Stream.Next(TokenValues.OpenBracket))
                 errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "() expected"));
+            Stream.MoveNext(1);
 
             elseBody = ParseBody(errors);
         }
@@ -397,7 +416,7 @@ public class Parser
         CodeLocation loc = Stream.LookAhead().Location;
         
         Dictionary<string, Expression> variables = new();
-        
+        int x = 0;
         do
         {
             //El while va a seguir funcionando siempre que sea posible crear otra variable que pertenezca al mismo scope que en este caso sería si lo siguiente al valor es una coma
@@ -405,6 +424,9 @@ public class Parser
             //se añade la variable al diccionario que formara parte del tipo Variable y se incluirá en el scope para poder comprobar más adelante en caso de tener in si ha sido declarada y 
             //se puede utilizar para añadirla ahora la scope su valor no es relevante por lo que pasa como null para evitar incoherencias en cuanto a si es object o Expression
             string variableName = null!;
+
+            if (x > 0)  Stream.MoveNext(1);
+
             if (Stream.LookAhead().Value.ToString() == "let")
                 Stream.MoveNext(1);
 
@@ -443,7 +465,9 @@ public class Parser
                 }
             }
 
-        } while (Stream.Next(TokenValues.StatementSeparator));
+            x++;
+
+        } while (Stream.Next(TokenValues.ValueSeparator));
         
 
         //Si aparece el token in quiere decir que lo que se encuentre a continuación pertenece al área en la que se utilizan las variables declaradas y se parsea lo que he denominado cuerpo de la 
@@ -465,7 +489,7 @@ public class Parser
         //Antes de devolver el ASTNode se eliminan todas las variables declaradas en este Scope para que no se vaya fuera de rango su utilización
         Scope.DeleteVariables(variables);
 
-        return new(variables, body, Scope, loc);
+        return new(variables, body, loc);
     }
 
     private Print ParsePrint(List<CompilingError> errors)
@@ -512,7 +536,7 @@ public class Parser
     {
         if (Stream.LookAhead().Type is not TokenType.Identifier) return null;
 
-        return new Var(Stream.LookAhead().Value.ToString(), Scope, Stream.LookAhead().Location);
+        return new Var(Stream.LookAhead().Value.ToString(), Stream.LookAhead().Location);
     }
     private Expression? ParseParenthesis(List<CompilingError> errors)
     {

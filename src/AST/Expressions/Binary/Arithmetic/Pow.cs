@@ -5,10 +5,10 @@ public class Pow :BinaryExpression
     public override ExpressionType Type { get; set; }
     public override object? Value { get; set; }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
-        Left!.Evaluate();
-        Right!.Evaluate();
+        Left!.Evaluate(context, scope);
+        Right!.Evaluate(context, scope);
 
         Value = Math.Pow((double)Left.Value!, (double)Right.Value!);
     }

@@ -54,7 +54,7 @@ public class FunctionDeclare : ASTNode
         return right;
     }
 
-    public override void Evaluate() { }
+    public override void Evaluate(Context context, Scope scope) { }
 }
 
 
@@ -96,7 +96,7 @@ public class FunctionCall : ASTNode
         return true;
     }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
         //Se instancia la función a la que está llamando para poder acceder a sus valores, si solo contiene una expresión se imprime el resultado, de lo 
         //contrario se realiza la evaluación de cada uno de los nodos.
@@ -113,13 +113,13 @@ public class FunctionCall : ASTNode
         int x = 0;
         foreach (var item in Arguments)
         {
-            if (Scope.ContainFuncVar(variable[x]))
+            if (scope.ContainFuncVar(variable[x]))
             {
-                redefine.Add(variable[x], Scope.FuncVars[variable[x]]);
-                Scope.FuncVars.Remove(variable[x]);
+                redefine.Add(variable[x], scope.FuncVars[variable[x]]);
+                scope.FuncVars.Remove(variable[x]);
             }
 
-            Scope.AddFuncVar(variable[x], item.Value!);
+            scope.AddFuncVar(variable[x], item.Value!);
             x++;
         }
 
@@ -130,29 +130,29 @@ public class FunctionCall : ASTNode
         {
             if (item is Expression expression)
             {
-                expression.Evaluate();
+                expression.Evaluate(context, scope);
                 Console.WriteLine(expression.Value!.ToString());
             }
             else if (item is ElementalFunction elem)
             {
-                elem.Evaluate();
+                elem.Evaluate(context, scope);
                 Console.WriteLine(elem.Value!.ToString());
             }
             else if (item is Variable variable1)
             {
-                variable1.Evaluate();
+                variable1.Evaluate(context, scope);
             }
             else if (item is FunctionCall call)
             {
-                call.Evaluate();
+                call.Evaluate(context, scope);
             }
             else if (item is Conditional conditional)
             {
-                conditional.Evaluate();
+                conditional.Evaluate(context, scope);
             }
             else if (item is Print print)
             {
-                print.Evaluate();
+                print.Evaluate(context, scope);
             }
         }
 
@@ -160,10 +160,10 @@ public class FunctionCall : ASTNode
         //algunas (como ocurriría en llamados recursivos) se vuelven a añadir con sus valores originales.
         foreach (var item in variable)
         {
-            Scope.FuncVars.Remove(item);
+            scope.FuncVars.Remove(item);
             if (redefine.ContainsKey(item))
             {
-                Scope.AddFuncVar(item, redefine[item]);
+                scope.AddFuncVar(item, redefine[item]);
             }
         }
     }

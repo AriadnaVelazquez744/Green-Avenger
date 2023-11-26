@@ -9,5 +9,5 @@ public abstract class ASTNode
     }
     public abstract bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors);
 
-    public abstract void Evaluate();
+    public abstract void Evaluate(Context context, Scope scope);
 }

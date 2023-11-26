@@ -55,7 +55,7 @@ public class MainProgram : ASTNode
         return right;
     }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
         //Se evalúan primero las declaraciones de funciones y se eliminan de la lista de nodos para no volver a tomarlas.
         foreach (ASTNode item in Statements)
@@ -72,29 +72,29 @@ public class MainProgram : ASTNode
         {
             if (item is Expression expression)
             {
-                expression.Evaluate();
+                expression.Evaluate(context, scope);
                 Console.WriteLine(expression.Value!.ToString());
             }
             else if (item is ElementalFunction elem)
             {
-                elem.Evaluate();
+                elem.Evaluate(context, scope);
                 Console.WriteLine(elem.Value!.ToString());
             }
             else if (item is Variable variable)
             {
-                variable.Evaluate();
+                variable.Evaluate(context, scope);
             }
             else if (item is FunctionCall call)
             {
-                call.Evaluate();
+                call.Evaluate(context, scope);
             }
             else if (item is Conditional conditional)
             {
-                conditional.Evaluate();
+                conditional.Evaluate(context, scope);
             }
             else if (item is Print print)
             {
-                print.Evaluate();
+                print.Evaluate(context, scope);
             }
         }
     }

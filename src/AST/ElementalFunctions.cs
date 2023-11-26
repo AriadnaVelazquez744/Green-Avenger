@@ -80,7 +80,7 @@ public class ElementalFunction : Expression
         return check;
     }
 
-    public override void Evaluate()
+    public override void Evaluate(Context context, Scope scope)
     {
         if (Arg.Count == 0)
         {
@@ -89,7 +89,7 @@ public class ElementalFunction : Expression
         
         foreach (var item in Arg)
         {
-            item.Evaluate();
+            item.Evaluate(context, scope);
         }
 
         List<double> arguments = new();
