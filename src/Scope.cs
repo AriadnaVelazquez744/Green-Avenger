@@ -6,7 +6,7 @@ public class Scope
     //Los métodos presentan nombres muy especificativos por lo que no los comentaré.
     
     public Dictionary<string, Expression> Variables { get; set; }
-    public Dictionary<string, object> FuncVars { get; set; }
+    public Dictionary<string, Expression> FuncVars { get; set; }
     public Scope()
     {
         Variables = new();
@@ -33,7 +33,7 @@ public class Scope
     {
         return FuncVars.ContainsKey(id);
     }
-    public void AddFuncVar(string name, object value)
+    public void AddFuncVar(string name, Expression value)
     {
         FuncVars.Add(name, value);
     }

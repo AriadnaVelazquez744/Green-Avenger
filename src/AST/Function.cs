@@ -5,53 +5,56 @@ public class FunctionDeclare : ASTNode
     public string Id { get; set; }
     public List<string> Arguments { get; set; }
     public List<ASTNode> Statement { get; set; }
-    public Context Context { get; set; }
-    public FunctionDeclare(string id, List<string> arguments, List<ASTNode> statement, Context context, CodeLocation location) : base(location)
+    public FunctionDeclare(string id, List<string> arguments, List<ASTNode> statement, CodeLocation location) : base(location)
     {
         Id = id;
         Arguments = arguments;
         Statement = statement;
-        Context = context;
     }
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
         //Para revisar que sea correcta semánticamente lo que hay que comprobar es que cada uno de sus nodos lo sean.
-        bool right = true;
+        bool check = true;
+        bool x = true;
+
+        context.AddFunc(Id, Arguments.Count);
+        foreach (var item in Arguments)
+        {
+            scope.AddFuncVar(item, null!);
+        }
 
         foreach (var item in Statement)
         {
             if (item is Expression expression)
             {
-                right = expression.CheckSemantic(context, scope, errors);
+                check = expression.CheckSemantic(context, scope, errors);
             }
             else if (item is Variable variable)
             {
-                right = variable.CheckSemantic(context, scope, errors);
+                check = variable.CheckSemantic(context, scope, errors);
             }
             else if (item is FunctionCall call)
             {
-                right = call.CheckSemantic(context, scope, errors);
+                check = call.CheckSemantic(context, scope, errors);
             }
             else if (item is Conditional conditional)
             {
-                right = conditional.CheckSemantic(context, scope, errors);
+                check = conditional.CheckSemantic(context, scope, errors);
             }
             else if (item is Print print)
             {
-                right = print.CheckSemantic(context, scope, errors);
-            }
-            else if (item is FunctionDeclare declare)
-            {
-                right = declare.CheckSemantic(context, scope, errors);
+                check = print.CheckSemantic(context, scope, errors);
             }
             else if (item is ElementalFunction elem)
             {
-                right = elem.CheckSemantic(context, scope, errors);
+                check = elem.CheckSemantic(context, scope, errors);
             }
+
+            if (check is false) x = false;
         }
         
-        return right;
+        return check && x;
     }
 
     public override void Evaluate(Context context, Scope scope) { }
@@ -65,24 +68,21 @@ public class FunctionCall : ASTNode
     //de Context y Scope para utilizar en su evaluación.
     public string Id { get; set; }
     public List<Expression> Arguments { get; set; }
-    public Context Context { get; set; }
-    public Scope Scope { get; set; }
-    public FunctionCall(string id, List<Expression> arguments, Context context, Scope scope, CodeLocation location) : base(location)
+    public FunctionCall(string id, List<Expression> arguments, CodeLocation location) : base(location)
     {
         Id = id;
         Arguments = arguments;
-        Context = context;
-        Scope = scope;
     }
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
         //Para asegurarse de su correcta semántica se comprueba si la función fue creada y si cada una de las expresiones de los argumentos son correctas.
+        bool check = true;
 
         if (!context.ContainFunc(Id))
         {
             errors.Add(new CompilingError(Location, ErrorCode.Invalid, "This function has not been declare, so it can't be call"));
-            return false;
+            check = false;
         }
 
         foreach (var item in Arguments)
@@ -90,10 +90,20 @@ public class FunctionCall : ASTNode
             if (!item.CheckSemantic(context, scope, errors))
             {
                 errors.Add(new CompilingError(Location, ErrorCode.Invalid, "The arguments are not correctly declared"));
-                return false;
+                check = false;
             }
         }
-        return true;
+
+        int func = context.GetArgNumber(Id);
+        int call = Arguments.Count;
+
+        if (func != call)
+        {
+            errors.Add(new CompilingError(Location, ErrorCode.Invalid, String.Format("The number of arguments is incorrect. {0} arguments were expected and {1} were given", func, call)));
+            check = false; 
+        }
+
+        return check;
     }
 
     public override void Evaluate(Context context, Scope scope)
@@ -101,10 +111,10 @@ public class FunctionCall : ASTNode
         //Se instancia la función a la que está llamando para poder acceder a sus valores, si solo contiene una expresión se imprime el resultado, de lo 
         //contrario se realiza la evaluación de cada uno de los nodos.
 
-        FunctionDeclare func = Context.GetFunction(Id);
+        FunctionDeclare func = context.GetFunction(Id);
 
         List<string> variable = func.Arguments;
-        Dictionary<string, object> redefine = new();
+        Dictionary<string, Expression> redefine = new();
 
         //Para poder utilizar los argumentos como variables lo primero es añadirlas al scope para poder llamar sus valores, y se evalúa la expresión que 
         //compone su valor antes de añadirla, el nombre se toma de la lista de argumentos de func utilizando como referencia la variable x que aumenta en 
@@ -118,8 +128,8 @@ public class FunctionCall : ASTNode
                 redefine.Add(variable[x], scope.FuncVars[variable[x]]);
                 scope.FuncVars.Remove(variable[x]);
             }
-
-            scope.AddFuncVar(variable[x], item.Value!);
+            item.Evaluate(context, scope);
+            scope.AddFuncVar(variable[x], item);
             x++;
         }
 

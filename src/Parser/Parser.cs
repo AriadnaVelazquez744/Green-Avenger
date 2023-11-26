@@ -300,6 +300,7 @@ public class Parser
         Token id = Stream.LookAhead();
         string functionName = id.Value.ToString();
         
+        
 
         if (!Stream.Next(TokenValues.OpenBracket))
         {
@@ -308,6 +309,7 @@ public class Parser
 
         //Se inicializa una lista que contendrá todos los argumentos y que luego se pasará al nodo creado y que será devuelto
         List<string> arguments = new();
+
         if (!Stream.Next(TokenValues.ClosedBracket))
         {
             do
@@ -337,6 +339,8 @@ public class Parser
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "( expected"));
         }
 
+        Stream.MoveNext(1);
+
         //Se crea el cuerpo de la función como una lista de nodos para poder evaluarlos más adelante, si no existe cuerpo no hay función
         List<ASTNode> body = ParseBody(errors);
         if (body == null)
@@ -357,7 +361,7 @@ public class Parser
         
         Context.AddFunc(functionName, arguments.Count);
 
-        return new FunctionDeclare(functionName, arguments, body, Context, id.Location);
+        return new FunctionDeclare(functionName, arguments, body, id.Location);
     }
 
     private FunctionCall ParseFunctionInvocation(List<CompilingError> errors, Token id)
@@ -368,44 +372,34 @@ public class Parser
 
         List<Expression> argumentValues = new();
         string functionName = id.Value.ToString();
-        int count = Context.GetArgNumber(functionName);
 
-        if (!Stream.Next(TokenValues.OpenBracket))
+        if (Stream.LookAhead().Value != "(")
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "( expected"));
         }
+        Stream.MoveNext(1);
 
-        if (count != 0)
+        while (true)
         {
-            while (true)
+            Expression argValue = ParseExpression(errors)!;
+            if (argValue is not null) 
             {
-                Expression argValue = ParseExpression(errors)!;
-                if (argValue is not null) 
-                {
-                    count--;
-                    argumentValues.Add(argValue);
-                }
-
-                if (!Stream.Next(TokenValues.ValueSeparator))
-                    break;    
+                argumentValues.Add(argValue);
             }
 
-            if (count != 0)
-            {
-                if (!Stream.Next(TokenValues.ClosedBracket))
-                    errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
-                
-                errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Invalid, "Wrong number of arguments"));
-                return null!;
-            }
+            if (!Stream.Next(TokenValues.ValueSeparator))
+                break; 
+
+            Stream.MoveNext(1);   
         }
+
         
         if (!Stream.Next(TokenValues.ClosedBracket))
         {
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, ") expected"));
         }
 
-        return new FunctionCall(functionName, argumentValues, Context, Scope, id.Location);
+        return new FunctionCall(functionName, argumentValues, id.Location);
     }
 
     private Variable ParseVariable(List<CompilingError> errors) 

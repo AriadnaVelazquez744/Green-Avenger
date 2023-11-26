@@ -17,6 +17,15 @@ public class MainProgram : ASTNode
 
         bool check = true;
         bool x = true;
+
+        foreach (ASTNode item in Statements)
+        {
+            if (item is FunctionDeclare declare)
+            {
+                check = declare.CheckSemantic(context, scope, errors);
+                if (check is false)  x = false;
+            }
+        }
         
         foreach (var item in Statements)
         {
@@ -42,7 +51,7 @@ public class MainProgram : ASTNode
             }
             else if (item is FunctionDeclare declare)
             {
-                check = declare.CheckSemantic(context, scope, errors);
+                continue;
             }
             else if (item is ElementalFunction elem)
             {
@@ -66,7 +75,6 @@ public class MainProgram : ASTNode
             if (item is FunctionDeclare declare)
             {
                 context.AddFuncExpression(declare);                
-                Statements.Remove(item);
             }
         }
 
@@ -94,6 +102,10 @@ public class MainProgram : ASTNode
             else if (item is Conditional conditional)
             {
                 conditional.Evaluate(context, scope);
+            }
+            if (item is FunctionDeclare)
+            {
+                continue;
             }
             else if (item is Print print)
             {
