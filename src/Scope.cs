@@ -37,4 +37,16 @@ public class Scope
     {
         FuncVars.Add(name, value);
     }
+
+    public Expression TakeVar(string id)
+    {
+        if (FuncVars.ContainsKey(id))
+        {
+            return FuncVars[id];
+        }
+        else
+        {
+            return Variables[id];
+        }
+    }
 }

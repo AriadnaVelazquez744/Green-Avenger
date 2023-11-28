@@ -4,11 +4,9 @@ public class MainProgram : ASTNode
 {
     //Sus propiedades son la lista de nodos a analizar y la ubicación que proviene de su padre.
     public List<ASTNode> Statements { get; set; }
-    public Context Context { get; set; }
-    public MainProgram(List<ASTNode> statements, Context context, CodeLocation location) : base(location)
+    public MainProgram(List<ASTNode> statements, CodeLocation location) : base(location)
     {
         Statements = statements;
-        Context = context;
     }
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
@@ -23,7 +21,9 @@ public class MainProgram : ASTNode
             if (item is FunctionDeclare declare)
             {
                 check = declare.CheckSemantic(context, scope, errors);
+                
                 if (check is false)  x = false;
+                //else  context.AddFuncExpression(declare);                
             }
         }
         

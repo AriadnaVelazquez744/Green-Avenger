@@ -1,7 +1,7 @@
 public class FunctionDeclare : ASTNode
 {
     //Se crea un tipo para guardar la estructura de las funciones declaras que contienen el nombre de la función, una lista de los argumentos que 
-    //tiene y una lista con los nodos que conforman los comandos que ejecutan.
+    //ha de recibir y una lista con los nodos que conforman los comandos que ejecuta.
     public string Id { get; set; }
     public List<string> Arguments { get; set; }
     public List<ASTNode> Statement { get; set; }
@@ -18,6 +18,8 @@ public class FunctionDeclare : ASTNode
         bool check = true;
         bool x = true;
 
+        //Pero primero hay que establecer que existe la función y cuales son los argumentos que la conforman para que no hayan errores en las evaluaciones de las expresiones internan 
+        //que utilicen estos argumentos como variables.
         context.AddFunc(Id, Arguments.Count);
         foreach (var item in Arguments)
         {
@@ -63,7 +65,7 @@ public class FunctionDeclare : ASTNode
 
 public class FunctionCall : ASTNode
 {
-    //Sus propiedades son el nombre de la función que llama y  las expresiones que darán valor a los argumentos, también se le atribuyen instancias 
+    //Sus propiedades son el nombre de la función que llama y  las expresiones que darán valor a los argumentos
     
     //de Context y Scope para utilizar en su evaluación.
     public string Id { get; set; }
@@ -76,7 +78,8 @@ public class FunctionCall : ASTNode
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
-        //Para asegurarse de su correcta semántica se comprueba si la función fue creada y si cada una de las expresiones de los argumentos son correctas.
+        //Para asegurarse de su correcta semántica se comprueba si la función fue cread, si cada una de las expresiones de los argumentos son correctas y  si el número de argumentos de 
+        //la llamada coinciden con los requeridos en  la declaración de la función
         bool check = true;
 
         if (!context.ContainFunc(Id))
@@ -167,7 +170,7 @@ public class FunctionCall : ASTNode
         }
 
         //Al finalizar con la evaluación del cuerpo de la función se eliminan las variables que pertenecen a este llamado y si se tuvieron que redefinir 
-        //algunas (como ocurriría en llamados recursivos) se vuelven a añadir con sus valores originales.
+        //algunas (como ocurriría en llamados recursivos) se vuelven a añadir con sus valores originales, esto ocurre siempre en el caso de que cada una de estas variables están declaras en un inicio.
         foreach (var item in variable)
         {
             scope.FuncVars.Remove(item);

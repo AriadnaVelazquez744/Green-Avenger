@@ -27,7 +27,7 @@ public class Var : AtomExpression
 
     public override void Evaluate(Context context, Scope scope)
     {
-        Expression exp = scope.FuncVars[Id] ?? scope.Variables[Id];
+        Expression exp = scope.TakeVar(Id);
         exp.Evaluate(context, scope);
         Value = exp.Value!;
     }

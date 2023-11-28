@@ -2,7 +2,6 @@ public class Context
 {
     //Se encuentran los elementos globales que es necesario revisar para evitar repeticiones o errores.
     //Se añaden y llaman las funciones que se van declarando para poder utilizarlas cuando sea necesario una vez comprobado que son semánticamente correctas.
-    //Los métodos implementados en esta clase son bastante básicos y con leer el nombre se tiene la idea de que hacen por lo que no los comentaré por separado.
     public List<string> ElementalFunctions { get; set; }
     public Dictionary<string, int> Functions { get; set; }
     public Dictionary<string, FunctionDeclare> FunctionDeclared { get; set; }
@@ -34,6 +33,7 @@ public class Context
     {
         FunctionDeclared.Add(newFunc.Id, newFunc);
     }
+    
     public int GetArgNumber(string name)
     {
         return Functions[name];

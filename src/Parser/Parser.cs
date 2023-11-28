@@ -117,7 +117,7 @@ public class Parser
         if (Stream.LookAhead(-1).Value != ";")
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "; expected")); 
 
-        return new(nodes, Context, loc);
+        return new(nodes, loc);
     }
 
     private List<ASTNode> ParseBody(List<CompilingError> errors)
