@@ -52,5 +52,6 @@ while (true)
             program.Evaluate(context, scope);
             //Console.WriteLine(program);
         }
+        scope.Variables.Clear();
     }
 }
