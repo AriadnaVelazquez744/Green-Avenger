@@ -42,7 +42,12 @@ public class Scope
     {
         if (FuncVars.ContainsKey(id))
         {
-            return FuncVars[id];
+            Expression a = FuncVars[id];
+            if(a is Var var)
+            {
+                return Variables[var.Id.ToString()!];
+            }
+            return a;
         }
         else
         {
