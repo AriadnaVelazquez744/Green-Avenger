@@ -1,6 +1,7 @@
 ﻿//Lo primero que hace es inicializar el analizador léxico para que genere los tipos y valores de tokens y poder 
 //luego iterar por el IEnumerable que devuelve su método principal que genera los tokens.
-//Se lee la línea introducida en la consola que se va a analizar.
+//Se inicializan el context y el scope
+//Se lee la línea introducida en la consola que se va a analizar en forma de ciclo hasta q pongan una línea vacía.
 
 LexicalAnalyzer lex = Lexer.LexicalAnalyzer;
 Context context = new();
