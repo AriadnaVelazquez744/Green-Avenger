@@ -14,7 +14,6 @@ public class CompilingError
 
 public enum ErrorCode   //Tipos de errores que se pueden encontrar durante el análisis del código de entrada
 {
-    None,
     Expected,
     Invalid,
     Unknown
