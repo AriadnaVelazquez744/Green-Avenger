@@ -17,6 +17,7 @@ public static class Lexer   //Vocabulario.
                 _LexicalProcess.Operators["*"] = TokenValues.Mul;
                 _LexicalProcess.Operators["/"] = TokenValues.Div;
                 _LexicalProcess.Operators["^"] = TokenValues.Pow;
+                _LexicalProcess.Operators["%"] = TokenValues.Rest;
 
                 _LexicalProcess.Operators["="] = TokenValues.Assign;
                 _LexicalProcess.Operators[":="] = TokenValues.Reassign;

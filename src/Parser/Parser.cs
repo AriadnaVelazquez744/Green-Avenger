@@ -619,6 +619,9 @@ public class Parser
         Expression? exp = ParsePow(left, errors);
         if (exp != null) return exp;
 
+        exp = ParseRest(left, errors);
+        if (exp != null) return exp;
+
         return left;
     }
 
@@ -763,6 +766,27 @@ public class Parser
 
         return ParseExpressionLv5_(div, errors);
     }
+    private Expression? ParseRest(Expression? left, List<CompilingError> errors)
+    {
+        Rest div = new(Stream.LookAhead().Location);
+
+        if (left is null || !Stream.Next(TokenValues.Rest)) return null;
+
+        div.Left = left;
+
+        Stream.MoveNext(1);
+
+        Expression? right = ParseExpressionLv6(errors);
+        if (right == null)
+        {
+            Stream.MoveBack(2);
+            return null;   
+        }
+        div.Right = right;
+
+        return ParseExpressionLv6_(div, errors);
+    }
+
     private Expression? ParsePow(Expression? left, List<CompilingError> errors)
     {
         Pow pow = new(Stream.LookAhead().Location);

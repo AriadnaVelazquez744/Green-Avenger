@@ -56,6 +56,7 @@ public class TokenValues
     public const string Mul = "*"; // *
     public const string Div = "/"; // /
     public const string Pow = "^"; // ^
+    public const string Rest = "%"; // %
     public const string And = "&"; // &
     public const string Or = "|"; // |
     public const string Not = "!"; // !
