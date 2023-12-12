@@ -9,7 +9,7 @@ Scope scope = new();
 
 while (true)
 {
-    Console.WriteLine("Introduce the code: ");
+    Console.Write(">");
     string text = Console.ReadLine()!;
     if (text == "")
         break;
@@ -17,7 +17,6 @@ while (true)
     //Se inicializa el IEnumerable de los tokens llamando el método correspondiente del lex con el texto
     //Se inicializan también las clases TokenStream, Parser para poder utilizar sus métodos y propiedades, la lista 
     //de errores para ir guardándolos y el nodo de programa elemental que es el que evaluará todas las estructuras que se creen
-    Console.WriteLine("Iniciando el análisis");
     
     IEnumerable<Token> tokens = lex.GetTokens(text, new List<CompilingError>());
     
@@ -48,9 +47,7 @@ while (true)
         }
         else
         {
-            Console.WriteLine("Iniciando Evaluación");
             program.Evaluate(context, scope);
-            //Console.WriteLine(program);
         }
         scope.Variables.Clear();
     }
