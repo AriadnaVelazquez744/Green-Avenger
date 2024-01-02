@@ -78,6 +78,12 @@ public class ElementalFunction : Expression
         {
             check = item.CheckSemantic(context, scope, errors);
 
+            if (item is Var var && item.Type == ExpressionType.Undeclared)
+            {
+                scope.FuncVars[var.Id].Type = ExpressionType.Number;
+            }
+            item.Type = ExpressionType.Number;
+
             if (check is false) x = false;
         }
 

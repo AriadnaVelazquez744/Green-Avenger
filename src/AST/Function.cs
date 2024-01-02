@@ -20,13 +20,22 @@ public class FunctionDeclare : ASTNode
 
         //Pero primero hay que establecer que existe la función y cuales son los argumentos que la conforman para que no hayan errores en las evaluaciones de las expresiones internan 
         //que utilicen estos argumentos como variables.
-        context.AddFunc(Id, Arguments.Count);
         List<ExpressionType> types = new();
 
         foreach (var item in Arguments)
         {
-            scope.AddFuncVar(item.Key, item.Value);
+            if (!scope.ContainFuncVar(item.Key))
+            {
+                scope.AddFuncVar(item.Key, item.Value);
+            }
+            else
+            {
+                errors.Add(new CompilingError(Location, ErrorCode.Invalid, String.Format("A function already use {0} to name one of his variables", item.Key)));
+                return false;
+            }
         }
+
+        context.AddFunc(Id, Arguments.Count);
 
         if (Statement is not null)
         {
@@ -39,11 +48,15 @@ public class FunctionDeclare : ASTNode
             check = false;
         }
 
-        foreach (var item in Arguments)
+        if (check)
         {
-            types.Add(scope.FuncVars[item.Key].Type);
+            foreach (var item in Arguments)
+            {
+                types.Add(scope.FuncVars[item.Key].Type);
+            }
+            context.AddFuncTypesList(Id, types);
         }
-        context.AddFuncTypesList(Id, types);
+
 
         return check;
     }
@@ -177,43 +190,4 @@ public class FunctionCall : Expression
             }
         }
     }
-}
-
-public class FuncVar : AtomExpression
-{
-    public FuncVar(string id, CodeLocation location) : base(location)
-    {
-        Id = id;
-    }
-
-    public override object? Value { get; set; }
-    public string Id { get; }
-    public override ExpressionType Type { get; set; }
-
-    public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
-    {
-        if (!scope.ContainsVariable(Id) && !scope.ContainFuncVar(Id))
-        {
-            errors.Add(new CompilingError(Location, ErrorCode.Invalid, String.Format("The variable {0} has not been declared in this space", Id)));
-            return false;
-        }
-
-        if (!scope.ContainFuncVar(Id))
-        {
-            Expression exp = scope.Variables[Id];
-            if (exp is null)
-                Type = ExpressionType.Undeclared;
-            else
-                Type = exp.Type;
-        }
-        return true;
-    }
-
-     public override void Evaluate(Context context, Scope scope)
-    {
-        Expression exp = scope.TakeVar(Id);
-        exp.Evaluate(context, scope);
-        Value = exp.Value!;
-    }
-
 }

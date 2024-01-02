@@ -18,13 +18,10 @@ public class Var : AtomExpression
             return false;
         }
 
-        if (!scope.ContainFuncVar(Id))
+        if (scope.ContainsVariable(Id))
         {
             Expression exp = scope.Variables[Id];
-            if (exp is null)
-                Type = ExpressionType.Undeclared;
-            else
-                Type = exp.Type;
+            Type = exp.Type;
         }
         return true;
     }

@@ -68,6 +68,7 @@ public class Parser
 
         return new(nodes, loc);
     }
+    
     private Expression? ParseElementalFunction(List<CompilingError> errors)
     {
         //Se toma el token sobre el que se para el iterador para obtener el nombre de la función para comprobar si es una función elemental y para determinar 
@@ -211,6 +212,11 @@ public class Parser
             errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "Function statement expected"));
             return null!;
         }
+        
+        if (!Stream.Next(TokenValues.StatementSeparator))
+        {
+            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "\";\" symbol expected"));
+        }
 
         //Si no se le declaró un identificador para declararla o ese id ya fue utilizado para nombrar otra función, entonces no se devuelve nada
         if (id is null)
@@ -220,11 +226,6 @@ public class Parser
         {
             errors.Add(new CompilingError(id.Location, ErrorCode.Invalid, String.Format("The function {0} already exist", functionName)));
             return null!;
-        }
-        
-        if (!Stream.Next(TokenValues.StatementSeparator))
-        {
-            errors.Add(new CompilingError(Stream.LookAhead().Location, ErrorCode.Expected, "\";\" symbol expected"));
         }
 
         return new FunctionDeclare(functionName, arguments, body, id.Location);
