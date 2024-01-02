@@ -2,8 +2,8 @@ public class Scope
 {
     //Son los elementos que pertenecen a una vecindad del código y no al código completo.
     //En esta clase se guardarán las variables generadas a partir del let y los argumentos 
-    //de las funciones que presentan una estructura similar a dichas variables .
-    //Los métodos presentan nombres muy especificativos por lo que no los comentaré.
+    //de las funciones, que presentan una estructura similar a dichas variables .
+    //La funcion de los metodos esta descrita directamente en el nombre que se les ha asignado..
     
     public Dictionary<string, Expression> Variables { get; set; }
     public Dictionary<string, Expression> FuncVars { get; set; }

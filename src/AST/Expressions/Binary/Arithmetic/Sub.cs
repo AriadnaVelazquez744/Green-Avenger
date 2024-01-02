@@ -1,4 +1,4 @@
-public class Sub :BinaryExpression
+public class Sub : BinaryExpression
 {
     public Sub(CodeLocation location) : base(location) { }
 

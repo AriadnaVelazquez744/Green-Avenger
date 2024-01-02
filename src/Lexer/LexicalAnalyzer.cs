@@ -61,15 +61,30 @@ public class LexicalAnalyzer
                 continue;
             }
 
+            else if (MatchSymbol(stream, tokens))
+                continue;
+
             else if (stream.ReadNumber(out value))
             {
                 //Si primer char es un número se entra en el cuerpo de la condicional y se comprueba si realmente es un numero al intentar 
                 //parsearlo, de no ser posible se determina como un error, de lo contrario se añade como token numérico.
-                double d;
-                if (!double.TryParse(value, out d))
-                    errors.Add(new CompilingError(stream.Location, ErrorCode.Invalid, "Wrong number format"));
-
-                tokens.Add(new Token(TokenType.Number, value, stream.Location));
+                if (!double.TryParse(value, out double d))
+                    errors.Add(new CompilingError(stream.Location, ErrorCode.Invalid, String.Format("The element \"{0}\" is wrong declare", value)));
+                else
+                {
+                    if (tokens.Count != 0)
+                    {
+                        if (tokens.ElementAt(tokens.Count - 1).Value.ToString() == "-")
+                        {
+                            if (tokens.Count == 1 || tokens.ElementAt(tokens.Count - 2).Type is TokenType.Operator || tokens.ElementAt(tokens.Count - 2).Type is TokenType.Symbol)
+                            {
+                                string newValue = "-" + value;
+                                value = newValue;
+                            }
+                        }
+                    }
+                    tokens.Add(new Token(TokenType.Number, value, stream.Location));
+                }
 
                 continue;
             }
@@ -77,8 +92,8 @@ public class LexicalAnalyzer
             else if (MatchText(stream, tokens, errors))
                 continue;
 
-            else if (MatchSymbol(stream, tokens))
-                continue;
+            // else if (MatchSymbol(stream, tokens))
+            //     continue;
 
             //si el char que se está leyendo con coincide con ninguna de las posibilidades es algo completamente desconocido de lo que ni siquiera se me ocurre un ejemplo y se declara como tal
             else 
@@ -98,6 +113,23 @@ public class LexicalAnalyzer
         {
             if (stream.Match(op))
             {
+                if ((op == "-"))
+                {
+                    if (tokens.Count == 0)
+                    {
+                        return false;
+                    }
+                    else if (tokens.ElementAt(tokens.Count - 1).Type is TokenType.Operator || tokens.ElementAt(tokens.Count - 1).Type is TokenType.Symbol)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        tokens.Add(new Token(TokenType.Operator, Operators[op], stream.Location));
+                        return true;
+                    }
+                }
+
                 if (op == "=" || op == "," || op == ";" || op == "(" || op == ")" || op == "=>")
                 {
                     tokens.Add(new Token(TokenType.Symbol, Operators[op], stream.Location));
@@ -214,8 +246,31 @@ class TokenReader
         //si no ha aparecido un char que no sea un numero (después del primer punto no se puede añadir otro punto) se comienzan a añadir 
         //letras o numero que aparezcan ininterrumpidamente, si no aparece nada es que no está relacionado con el contexto de llamada y retorna false.
         number = "";
-        if (!EOL && Match("-"))
-            number += "-";
+
+        if (pos > 0) 
+        {
+            pos -= 1;
+            if (!EOL && Match("-"))
+            {
+                if (pos == 1)
+                {
+                    number += "-";
+                }
+                else
+                {
+                    pos -= 2;
+                    if (Match("+") || Match("%") || Match("^") || Match("/") || Match("*") || Match("(") || Match("=") || Match(">") || Match("-"))
+                    {
+                        pos += 1;
+                        number += "-";
+                    }
+                    else
+                        pos += 2;
+                }
+            }
+            else
+                pos += 1;
+        }
             
         while (!EOL && char.IsDigit(Peek()))
             number += ReadAny();
@@ -226,6 +281,8 @@ class TokenReader
                 number += ReadAny();
         }
 
+        // if (number.Length == 1 && number == "-")
+        //     return false;
         if (number.Length == 0)
             return false;
 

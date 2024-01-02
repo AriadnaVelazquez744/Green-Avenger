@@ -2,6 +2,7 @@ public class Add : BinaryExpression
 {
     public Add(CodeLocation location) : base(location) { }
 
+    //public override ExpressionType Type { get => Type; set => Type = ExpressionType.Number; }
     public override ExpressionType Type { get; set; }
     public override object? Value { get; set; }
 

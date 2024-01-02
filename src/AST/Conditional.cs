@@ -1,11 +1,13 @@
 
-public class Conditional : ASTNode
+public class Conditional : Expression
 {
-    //Contiene una expression que es la condicional, y cada parte (en caso de que contenga el else) tiene su propio cuerpo de expresiones a ejecutar.
+    //Contiene una expression que es la condicional, y cada parte (en caso de que contenga el else) tiene su propio cuerpo de expresiones a ejecutar que no puede ser null.
     public Expression Condition { get; set; }
-    public List<ASTNode> IfBody { get; set; }
-    public List<ASTNode> ElseBody { get; set; }
-    public Conditional(Expression condition, List<ASTNode> ifBody, List<ASTNode> elseBody, CodeLocation location) : base(location)
+    public Expression? IfBody { get; set; }
+    public Expression? ElseBody { get; set; }
+    public override ExpressionType Type { get; set; }
+    public override object? Value { get; set; }
+    public Conditional(Expression condition, Expression ifBody, Expression elseBody, CodeLocation location) : base(location)
     {
         Condition = condition;
         IfBody = ifBody;
@@ -14,74 +16,35 @@ public class Conditional : ASTNode
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
-        bool check = true;
-        bool x = true;
         //Se revisa que la condicional sea semánticamente correcta
-        check = Condition.CheckSemantic(context, scope, errors);
-        x = check;
+        bool check = Condition.CheckSemantic(context, scope, errors);
+        bool x = check;
 
-        foreach (var item in IfBody)
+        check = IfBody!.CheckSemantic(context, scope, errors);
+        if (check is false) x = false;
+
+        if (ElseBody is not null)
         {
-            if (item is Expression expression)
-            {
-                check = expression.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Variable variable)
-            {
-                check = variable.CheckSemantic(context, scope, errors);
-            }
-            else if (item is FunctionCall call)
-            {
-                check = call.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Conditional conditional)
-            {
-                check = conditional.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Print print)
-            {
-                check = print.CheckSemantic(context, scope, errors);
-            }
-            else if (item is ElementalFunction elem)
-            {
-                check = elem.CheckSemantic(context, scope, errors);
-            }
-
-            if (check is false)    x = check;
+            check = ElseBody.CheckSemantic(context, scope, errors);
+            if (check is false) x = false;
         }
+
+        ExpressionType IfType = IfBody.Type;
+        if(ElseBody is not null)
+        {
+            ExpressionType ElseType = ElseBody!.Type;
+            if (IfType.Equals(ElseType))
+            {
+                Type = IfType;
+            }
+            else
+            {
+                Type = ExpressionType.Undeclared;
+            }
+        }
+        else
+            Type = IfType;
         
-        if (ElseBody != null)
-        {
-            foreach (var item in ElseBody)
-            {
-                if (item is Expression expression)
-                {
-                    check = expression.CheckSemantic(context, scope, errors);
-                }
-                else if (item is Variable variable)
-                {
-                    check = variable.CheckSemantic(context, scope, errors);
-                }
-                else if (item is FunctionCall call)
-                {
-                    check = call.CheckSemantic(context, scope, errors);
-                }
-                else if (item is Conditional conditional)
-                {
-                    check = conditional.CheckSemantic(context, scope, errors);
-                }
-                else if (item is Print print)
-                {
-                    check = print.CheckSemantic(context, scope, errors);
-                }
-                else if (item is ElementalFunction elem)
-                {
-                    check = elem.CheckSemantic(context, scope, errors);
-                }
-
-                if (check is false)    x = check;
-            }
-        }
 
         return check && x;
     }
@@ -92,67 +55,16 @@ public class Conditional : ASTNode
         //Se evalúa la condicional y en caso de que la condicional sea verdadera se evalúa cada elemento dentro del if, en caso de que sea false se evalúa en cuerpo del else en caso de que exista.
         if (bool.Parse(Condition.Value!.ToString()!))
         {
-            foreach (var item in IfBody)
+            if (IfBody is not null)
             {
-                if (item is Expression expression)
-                {
-                    expression.Evaluate(context, scope);
-                    Console.WriteLine(expression.Value!.ToString());
-                }
-                else if (item is ElementalFunction elem)
-                {
-                    elem.Evaluate(context, scope);
-                    Console.WriteLine(elem.Value!.ToString());
-                }
-                else if (item is Variable variable)
-                {
-                    variable.Evaluate(context, scope);
-                }
-                else if (item is FunctionCall call)
-                {
-                    call.Evaluate(context, scope);
-                }
-                else if (item is Conditional conditional)
-                {
-                    conditional.Evaluate(context, scope);
-                }
-                else if (item is Print print)
-                {
-                    print.Evaluate(context, scope);
-                }
+                IfBody.Evaluate(context, scope);
+                Value = IfBody.Value;
             }
         }
         else if (ElseBody != null)
         {
-            foreach (var item in ElseBody)
-            {
-                if (item is Expression expression)
-                {
-                    expression.Evaluate(context, scope);
-                    Console.WriteLine(expression.Value!.ToString());
-                }
-                else if (item is ElementalFunction elem)
-                {
-                    elem.Evaluate(context, scope);
-                    Console.WriteLine(elem.Value!.ToString());
-                }
-                else if (item is Variable variable)
-                {
-                    variable.Evaluate(context, scope);
-                }
-                else if (item is FunctionCall call)
-                {
-                    call.Evaluate(context, scope);
-                }
-                else if (item is Conditional conditional)
-                {
-                    conditional.Evaluate(context, scope);
-                }
-                else if (item is Print print)
-                {
-                    print.Evaluate(context, scope);
-                }
-            }
+            ElseBody.Evaluate(context, scope);
+            Value = ElseBody.Value;
         }
     }
 }

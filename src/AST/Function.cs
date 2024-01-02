@@ -3,9 +3,10 @@ public class FunctionDeclare : ASTNode
     //Se crea un tipo para guardar la estructura de las funciones declaras que contienen el nombre de la función, una lista de los argumentos que 
     //ha de recibir y una lista con los nodos que conforman los comandos que ejecuta.
     public string Id { get; set; }
-    public List<string> Arguments { get; set; }
-    public List<ASTNode> Statement { get; set; }
-    public FunctionDeclare(string id, List<string> arguments, List<ASTNode> statement, CodeLocation location) : base(location)
+    public Dictionary<string, Var> Arguments { get; set; }
+    public Expression? Statement { get; set; }
+    public ExpressionType Type { get; set; }
+    public FunctionDeclare(string id, Dictionary<string, Var> arguments, Expression? statement, CodeLocation location) : base(location)
     {
         Id = id;
         Arguments = arguments;
@@ -16,60 +17,50 @@ public class FunctionDeclare : ASTNode
     {
         //Para revisar que sea correcta semánticamente lo que hay que comprobar es que cada uno de sus nodos lo sean.
         bool check = true;
-        bool x = true;
 
         //Pero primero hay que establecer que existe la función y cuales son los argumentos que la conforman para que no hayan errores en las evaluaciones de las expresiones internan 
         //que utilicen estos argumentos como variables.
         context.AddFunc(Id, Arguments.Count);
+        List<ExpressionType> types = new();
+
         foreach (var item in Arguments)
         {
-            scope.AddFuncVar(item, null!);
+            scope.AddFuncVar(item.Key, item.Value);
         }
 
-        foreach (var item in Statement)
+        if (Statement is not null)
         {
-            if (item is Expression expression)
-            {
-                check = expression.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Variable variable)
-            {
-                check = variable.CheckSemantic(context, scope, errors);
-            }
-            else if (item is FunctionCall call)
-            {
-                check = call.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Conditional conditional)
-            {
-                check = conditional.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Print print)
-            {
-                check = print.CheckSemantic(context, scope, errors);
-            }
-            else if (item is ElementalFunction elem)
-            {
-                check = elem.CheckSemantic(context, scope, errors);
-            }
-
-            if (check is false) x = false;
+            check = Statement.CheckSemantic(context, scope, errors);
+            Type = Statement.Type;
         }
-        
-        return check && x;
+        else
+        {
+            errors.Add(new CompilingError(Location, ErrorCode.Invalid, String.Format("The function {0} doesn't contain a statement", Id)));
+            check = false;
+        }
+
+        foreach (var item in Arguments)
+        {
+            types.Add(scope.FuncVars[item.Key].Type);
+        }
+        context.AddFuncTypesList(Id, types);
+
+        return check;
     }
 
     public override void Evaluate(Context context, Scope scope) { }
 }
 
 
-public class FunctionCall : ASTNode
+public class FunctionCall : Expression
 {
     //Sus propiedades son el nombre de la función que llama y  las expresiones que darán valor a los argumentos
     
     //de Context y Scope para utilizar en su evaluación.
     public string Id { get; set; }
     public List<Expression> Arguments { get; set; }
+    public override ExpressionType Type { get; set; }
+    public override object? Value { get; set; }
     public FunctionCall(string id, List<Expression> arguments, CodeLocation location) : base(location)
     {
         Id = id;
@@ -78,8 +69,9 @@ public class FunctionCall : ASTNode
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
-        //Para asegurarse de su correcta semántica se comprueba si la función fue cread, si cada una de las expresiones de los argumentos son correctas y  si el número de argumentos de 
+        //Para asegurarse de su correcta semántica se comprueba si la función fue creada, si cada una de las expresiones de los argumentos son correctas y  si el número de argumentos de 
         //la llamada coinciden con los requeridos en  la declaración de la función
+        //Finalmente se le asigna el tipo correspondiente al valor de retorno de la función o Undeclared para evitar que se vaya vacío
         bool check = true;
 
         if (!context.ContainFunc(Id))
@@ -105,18 +97,41 @@ public class FunctionCall : ASTNode
             errors.Add(new CompilingError(Location, ErrorCode.Invalid, String.Format("The number of arguments is incorrect. {0} arguments were expected and {1} were given", func, call)));
             check = false; 
         }
+        else if (context.FunctionTypes.ContainsKey(Id))
+        {
+            List<ExpressionType> types = context.GetTypesList(Id);
+            int x = 0;
+            foreach (var item in Arguments)
+            {
+                if (item.Type != types[x])
+                {
+                    errors.Add(new CompilingError(Location, ErrorCode.Invalid, String.Format("The type of the argument is incorrect. {0} type were expected and {1} type were given", types[x].ToString(), item.Type.ToString())));
+                    check = false;
+                }
+                x++;
+            }
+        }
+       
+        if (context.FunctionDeclared.ContainsKey(Id))
+            Type = context.FunctionDeclared[Id].Type;
+        else
+            Type = ExpressionType.Undeclared;
 
         return check;
     }
 
     public override void Evaluate(Context context, Scope scope)
     {
-        //Se instancia la función a la que está llamando para poder acceder a sus valores, si solo contiene una expresión se imprime el resultado, de lo 
-        //contrario se realiza la evaluación de cada uno de los nodos.
+        //Se instancia la función a la que está llamando para poder acceder a sus valores y evaluar las expresiones que contiene.
 
         FunctionDeclare func = context.GetFunction(Id);
 
-        List<string> variable = func.Arguments;
+        Dictionary<string, Var> variable = func.Arguments;
+        List<string> ids = new();
+        foreach (var item in variable)
+        {
+            ids.Add(item.Key);
+        }
         Dictionary<string, Expression> redefine = new();
 
         //Para poder utilizar los argumentos como variables lo primero es añadirlas al scope para poder llamar sus valores, y se evalúa la expresión que 
@@ -126,52 +141,34 @@ public class FunctionCall : ASTNode
         int x = 0;
         foreach (var item in Arguments)
         {
-            if (scope.ContainFuncVar(variable[x]))
+            Expression exp = item;
+            if ((item is Var var) && !scope.ContainFuncVar(var.Id))
             {
-                redefine.Add(variable[x], scope.FuncVars[variable[x]]);
-                scope.FuncVars.Remove(variable[x]);
+                exp = scope.Variables[var.Id];
             }
-            item.Evaluate(context, scope);
-            scope.AddFuncVar(variable[x], item);
+            exp.Evaluate(context, scope);
+            exp.Type = item.Type;
+            if (scope.ContainFuncVar(ids[x]))
+            {
+                redefine.Add(ids[x], scope.FuncVars[ids[x]]);
+                scope.FuncVars.Remove(ids[x]);
+            }
+            scope.AddFuncVar(ids[x], exp);
             x++;
         }
 
 
         //Se obtiene el cuerpo de la función y se evalúa cada uno de los nodos que la conforman.
-        List<ASTNode> body = func.Statement;
-        foreach (var item in body)
+        Expression body = func.Statement!;
+        if (body is not null)
         {
-            if (item is Expression expression)
-            {
-                expression.Evaluate(context, scope);
-                Console.WriteLine(expression.Value!.ToString());
-            }
-            else if (item is ElementalFunction elem)
-            {
-                elem.Evaluate(context, scope);
-                Console.WriteLine(elem.Value!.ToString());
-            }
-            else if (item is Variable variable1)
-            {
-                variable1.Evaluate(context, scope);
-            }
-            else if (item is FunctionCall call)
-            {
-                call.Evaluate(context, scope);
-            }
-            else if (item is Conditional conditional)
-            {
-                conditional.Evaluate(context, scope);
-            }
-            else if (item is Print print)
-            {
-                print.Evaluate(context, scope);
-            }
+            body.Evaluate(context, scope);
+            Value = body.Value;
         }
 
         //Al finalizar con la evaluación del cuerpo de la función se eliminan las variables que pertenecen a este llamado y si se tuvieron que redefinir 
         //algunas (como ocurriría en llamados recursivos) se vuelven a añadir con sus valores originales, esto ocurre siempre en el caso de que cada una de estas variables están declaras en un inicio.
-        foreach (var item in variable)
+        foreach (var item in ids)
         {
             scope.FuncVars.Remove(item);
             if (redefine.ContainsKey(item))
@@ -180,4 +177,43 @@ public class FunctionCall : ASTNode
             }
         }
     }
+}
+
+public class FuncVar : AtomExpression
+{
+    public FuncVar(string id, CodeLocation location) : base(location)
+    {
+        Id = id;
+    }
+
+    public override object? Value { get; set; }
+    public string Id { get; }
+    public override ExpressionType Type { get; set; }
+
+    public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
+    {
+        if (!scope.ContainsVariable(Id) && !scope.ContainFuncVar(Id))
+        {
+            errors.Add(new CompilingError(Location, ErrorCode.Invalid, String.Format("The variable {0} has not been declared in this space", Id)));
+            return false;
+        }
+
+        if (!scope.ContainFuncVar(Id))
+        {
+            Expression exp = scope.Variables[Id];
+            if (exp is null)
+                Type = ExpressionType.Undeclared;
+            else
+                Type = exp.Type;
+        }
+        return true;
+    }
+
+     public override void Evaluate(Context context, Scope scope)
+    {
+        Expression exp = scope.TakeVar(Id);
+        exp.Evaluate(context, scope);
+        Value = exp.Value!;
+    }
+
 }

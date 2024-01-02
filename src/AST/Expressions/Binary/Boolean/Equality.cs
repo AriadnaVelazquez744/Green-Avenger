@@ -1,5 +1,6 @@
 public class Equality : BinaryExpression
 {
+    // Se encarga de establecer la relacion de igualdad entre dos elementos del mismo tipo
     public Equality(CodeLocation location) : base(location) { }
 
     public override ExpressionType Type { get; set; }
@@ -8,17 +9,27 @@ public class Equality : BinaryExpression
 
     public override bool CheckSemantic(Context context, Scope scope, List<CompilingError> errors)
     {
-        //Se comprueba si ambos lados tienen una correcta semántica, se hace la diferenciación de si solo está el miembro derecho por el caso de Not que no contiene ambos miembros.
         bool right = Right!.CheckSemantic(context, scope, errors);
         bool left = Left!.CheckSemantic(context, scope, errors);
 
-        if (! Right.Type.Equals(Left.Type))
+        if (!Right.Type.Equals(Left.Type) && (Right.Type is not ExpressionType.Undeclared || Left.Type is not ExpressionType.Undeclared))
         {
             errors.Add(new CompilingError(Location, ErrorCode.Invalid, "It's impossible to equal different types of elements"));
             Type = ExpressionType.ErrorType;
             return false;
         }
-        
+
+        if (Right is Var varR && Right.Type == ExpressionType.Undeclared)
+        {
+            scope.FuncVars[varR.Id].Type = ExpressionType.Boolean;
+        }
+        if (Left is Var varL && Left.Type == ExpressionType.Undeclared)
+        {
+            scope.FuncVars[varL.Id].Type = ExpressionType.Boolean;
+        }
+        Right.Type = Left.Type = ExpressionType.Boolean;
+
+
         Type = ExpressionType.Boolean;
         return right && left;
     }

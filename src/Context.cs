@@ -2,8 +2,10 @@ public class Context
 {
     //Se encuentran los elementos globales que es necesario revisar para evitar repeticiones o errores.
     //Se añaden y llaman las funciones que se van declarando para poder utilizarlas cuando sea necesario una vez comprobado que son semánticamente correctas.
+    //Los metodos que contiene estan descritos en el nombre asignado.
     public List<string> ElementalFunctions { get; set; }
     public Dictionary<string, int> Functions { get; set; }
+    public Dictionary<string, List<ExpressionType>> FunctionTypes { get; set; }
     public Dictionary<string, FunctionDeclare> FunctionDeclared { get; set; }
 
     public Context()
@@ -14,6 +16,7 @@ public class Context
         };
         Functions = new();
         FunctionDeclared = new();
+        FunctionTypes = new();
     }
 
     public bool ContainsElemFunc(string name)
@@ -33,6 +36,10 @@ public class Context
     {
         FunctionDeclared.Add(newFunc.Id, newFunc);
     }
+    public void AddFuncTypesList(string id, List<ExpressionType> types)
+    {
+        FunctionTypes.Add(id, types);
+    }
     
     public int GetArgNumber(string name)
     {
@@ -41,5 +48,9 @@ public class Context
     public FunctionDeclare GetFunction(string id)
     {
         return FunctionDeclared[id];
+    }
+    public List<ExpressionType> GetTypesList(string id)
+    {
+        return FunctionTypes[id];
     }
 }

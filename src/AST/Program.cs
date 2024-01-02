@@ -2,7 +2,7 @@
 
 public class MainProgram : ASTNode
 {
-    //Sus propiedades son la lista de nodos a analizar y la ubicación que proviene de su padre.
+    //Sus propiedades son la lista de nodos a analizar.
     public List<ASTNode> Statements { get; set; }
     public MainProgram(List<ASTNode> statements, CodeLocation location) : base(location)
     {
@@ -21,43 +21,21 @@ public class MainProgram : ASTNode
             if (item is FunctionDeclare declare)
             {
                 check = declare.CheckSemantic(context, scope, errors);
-                
                 if (check is false)  x = false;
-                //else  context.AddFuncExpression(declare);                
             }
         }
         
         foreach (var item in Statements)
         {
-            if (item is Expression expression)
-            {
-                check = expression.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Variable variable)
-            {
-                check = variable.CheckSemantic(context, scope, errors);
-            }
-            else if (item is FunctionCall call)
-            {
-                check = call.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Conditional conditional)
-            {
-                check = conditional.CheckSemantic(context, scope, errors);
-            }
-            else if (item is Print print)
-            {
-                check = print.CheckSemantic(context, scope, errors);
-            }
-            else if (item is FunctionDeclare declare)
-            {
+            if (item is FunctionDeclare)
+            {    
                 continue;
             }
-            else if (item is ElementalFunction elem)
+            else
             {
-                check = elem.CheckSemantic(context, scope, errors);
+                check = ((Expression)item).CheckSemantic(context, scope, errors);
             }
-
+            
             if (check is false)  x = false;
         }
 
@@ -69,7 +47,6 @@ public class MainProgram : ASTNode
 
     public override void Evaluate(Context context, Scope scope)
     {
-        //Se evalúan primero las declaraciones de funciones y se eliminan de la lista de nodos para no volver a tomarlas.
         foreach (ASTNode item in Statements)
         {
             if (item is FunctionDeclare declare)
@@ -86,30 +63,9 @@ public class MainProgram : ASTNode
                 expression.Evaluate(context, scope);
                 Console.WriteLine(expression.Value!.ToString());
             }
-            else if (item is ElementalFunction elem)
-            {
-                elem.Evaluate(context, scope);
-                Console.WriteLine(elem.Value!.ToString());
-            }
-            else if (item is Variable variable)
-            {
-                variable.Evaluate(context, scope);
-            }
-            else if (item is FunctionCall call)
-            {
-                call.Evaluate(context, scope);
-            }
-            else if (item is Conditional conditional)
-            {
-                conditional.Evaluate(context, scope);
-            }
-            if (item is FunctionDeclare)
-            {
+            else if (item is FunctionDeclare)
+            { 
                 continue;
-            }
-            else if (item is Print print)
-            {
-                print.Evaluate(context, scope);
             }
         }
     }

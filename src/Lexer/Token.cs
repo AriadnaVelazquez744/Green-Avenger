@@ -47,57 +47,57 @@ public enum TokenType
 public class TokenValues
 {
     //Aquí se especifican los valores que pueden tomar los token en mi vocabulario, para mi comodidad los separé en 
-    //en el tipo de token al que pertenecen y les comenté cual es el string que les corresponde.
+    //en el tipo de token al que pertenecen.
     protected TokenValues() { }
 
     //TokenType.Operator
-    public const string Add = "+"; // +
-    public const string Sub = "-"; // -
-    public const string Mul = "*"; // *
-    public const string Div = "/"; // /
-    public const string Pow = "^"; // ^
-    public const string Rest = "%"; // %
-    public const string And = "&"; // &
-    public const string Or = "|"; // |
-    public const string Not = "!"; // !
-    public const string Equal = "=="; // ==
-    public const string Different = "!="; // !=
-    public const string Less = "<"; // <
-    public const string LessOrEqual = "<="; // <=
-    public const string More = ">"; // >
-    public const string MoreOrEqual = ">="; // >=
-    public const string Concat = "@"; // @
+    public const string Add = "+";
+    public const string Sub = "-";
+    public const string Mul = "*";
+    public const string Div = "/";
+    public const string Pow = "^";
+    public const string Rest = "%";
+    public const string And = "&";
+    public const string Or = "|";
+    public const string Not = "!";
+    public const string Equal = "==";
+    public const string Different = "!=";
+    public const string Less = "<";
+    public const string LessOrEqual = "<=";
+    public const string More = ">";
+    public const string MoreOrEqual = ">=";
+    public const string Concat = "@";
 
     //TokenType.Symbol
-    public const string Assign = "="; // =
-    public const string Reassign = ":="; // :=
-    public const string ValueSeparator = ","; // ,
-    public const string StatementSeparator = ";"; // ;
-    public const string OpenBracket = "("; // (
-    public const string ClosedBracket = ")"; // )
-    public const string LambdaExpression = "=>"; // =>
+    public const string Assign = "=";
+    public const string Reassign = ":="; // Nunca se llega a utilizar pero es una caracteristicas del Hulk completo por lo que ya loinclui para su futura mejora
+    public const string ValueSeparator = ",";
+    public const string StatementSeparator = ";";
+    public const string OpenBracket = "(";
+    public const string ClosedBracket = ")";
+    public const string LambdaExpression = "=>";
     
     //TokenType.ElementalFunctions
-    public const string sqrt = "sqrt"; // sqrt
-    public const string sin = "sin"; // sin
-    public const string cos = "cos"; //cos
+    public const string sqrt = "sqrt";
+    public const string sin = "sin";
+    public const string cos = "cos";
     public const string exp = "exp"; // Euler pow to a value
-    public const string log = "log"; // log
+    public const string log = "log";
     public const string rand = "rand"; // random number between [0, 1]
-    public const string PI = "PI"; // pi
-    public const string E = "E"; //Euler value
+    public const string PI = "PI";
+    public const string E = "E";
         
     //TokenType.BooleanExpression
-    public const string True = "true"; // True
-    public const string False = "false"; // False
+    public const string True = "true";
+    public const string False = "false";
 
     //TokenType.Conditional
-    public const string If = "if"; // if
-    public const string Else = "else"; //else
+    public const string If = "if";
+    public const string Else = "else";
 
     //TokenType.KeyWords
-    public const string let = "let"; // let
-    public const string In = "in"; // in
-    public const string function = "function"; //function
-    public const string print = "print"; // print
+    public const string let = "let"; // declarador de variables, es como del datatype del hulk
+    public const string In = "in"; // establece el fragmento de codigo en el que la variable declarada puede ser utilizada
+    public const string function = "function"; // declarador de funciones
+    public const string print = "print";
 }

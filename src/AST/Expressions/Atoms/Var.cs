@@ -1,5 +1,6 @@
 public class Var : AtomExpression
 {
+    //Esta clase es la encargadade intentar definir el tipo de una variable declarada y obtener su valor para utilizarlo durante la evaluacion 
     public Var(string id, CodeLocation location) : base(location)
     {
         Id = id;
@@ -20,7 +21,10 @@ public class Var : AtomExpression
         if (!scope.ContainFuncVar(Id))
         {
             Expression exp = scope.Variables[Id];
-            Type = exp.Type;
+            if (exp is null)
+                Type = ExpressionType.Undeclared;
+            else
+                Type = exp.Type;
         }
         return true;
     }

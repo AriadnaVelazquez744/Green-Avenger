@@ -40,7 +40,7 @@ public class TokenStream : IEnumerable<Token>
     public bool Next(string value)
     {
         //Comprueba si el valor del próximo token coincide con el del argumento
-        if (position < tokens.Count && LookAhead(1).Value == value)
+        if (position < tokens.Count-1 && LookAhead(1).Value == value)
         {
             position++;
             return true;
